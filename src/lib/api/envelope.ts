@@ -32,11 +32,12 @@ export function fail(
   message: string,
   status = 400,
   details?: unknown,
+  init?: ResponseInit,
 ): Response {
   return Response.json(
     {
       error: { code, message, details },
     } satisfies ApiError,
-    { status },
+    { status, ...init },
   );
 }

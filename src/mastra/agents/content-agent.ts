@@ -62,9 +62,17 @@ export async function runContentAgentAction(
         await executeGenerateContent(payload.input, contentAgent),
       );
     case "categorize":
-      return outputSchemas.categorize.parse(
-        await executeCategorize(payload.input, contentAgent),
-      );
+      try {
+        return outputSchemas.categorize.parse(
+          await executeCategorize(payload.input, contentAgent),
+        );
+      } catch {
+        return {
+          categoryId: null,
+          confidence: 0,
+          rationale: "AI could not produce a valid category suggestion.",
+        };
+      }
     case "seoSuggestions":
       return outputSchemas.seoSuggestions.parse(
         await executeSeoSuggestions(payload.input, contentAgent),

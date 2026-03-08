@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type SelectOption = {
@@ -26,7 +26,22 @@ export function SelectField({
   disabled,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [openDirection, setOpenDirection] = useState<"up" | "down">("down");
   const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const updateMenuDirection = useCallback(() => {
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return;
+    }
+
+    const estimatedHeight = Math.min(256, options.length * 36 + 12);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    const shouldOpenUp = spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+    setOpenDirection(shouldOpenUp ? "up" : "down");
+  }, [options.length]);
 
   const selectedLabel = useMemo(() => {
     const found = options.find((option) => option.value === value);
@@ -49,14 +64,22 @@ export function SelectField({
       }
     }
 
+    function handlePositioning() {
+      updateMenuDirection();
+    }
+
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEsc);
+    window.addEventListener("resize", handlePositioning);
+    window.addEventListener("scroll", handlePositioning, true);
 
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEsc);
+      window.removeEventListener("resize", handlePositioning);
+      window.removeEventListener("scroll", handlePositioning, true);
     };
-  }, [open]);
+  }, [open, updateMenuDirection]);
 
   return (
     <div ref={rootRef} className={cn("relative", className)}>
@@ -70,6 +93,11 @@ export function SelectField({
           disabled ? "cursor-not-allowed opacity-60" : "",
         )}
         onClick={() => setOpen((prev) => !prev)}
+        onMouseDown={() => {
+          if (!open) {
+            updateMenuDirection();
+          }
+        }}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -78,7 +106,12 @@ export function SelectField({
       </button>
 
       {open ? (
-        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-(--line) bg-(--bg-surface) shadow-lg">
+        <div
+          className={cn(
+            "absolute z-50 w-full overflow-hidden rounded-xl border border-(--line) bg-(--bg-surface) shadow-lg",
+            openDirection === "up" ? "bottom-full mb-1" : "top-full mt-1",
+          )}
+        >
           <ul role="listbox" className="max-h-64 overflow-auto py-1 text-sm">
             {options.map((option) => {
               const active = option.value === value;

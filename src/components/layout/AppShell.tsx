@@ -51,8 +51,8 @@ function ShellPath() {
 export function AppShell({ children }: Props) {
   return (
     <div className="min-h-screen bg-(--bg-base) text-(--ink)">
-      <div className="mx-auto grid max-w-350 grid-cols-1 gap-4 p-4 md:grid-cols-[240px_1fr]">
-        <aside className="glass-card rounded-3xl p-4">
+      <div className="mx-auto grid max-w-350 grid-cols-1 gap-4 p-4 md:items-start md:grid-cols-[240px_1fr]">
+        <aside className="glass-card rounded-3xl p-4 md:sticky md:top-4">
           <h1 className="font-display text-2xl font-bold">AI Content Manager</h1>
           <p className="mt-1 text-sm text-(--ink-soft)">Editorial cockpit</p>
           <Suspense fallback={<nav className="mt-6 space-y-2" />}>

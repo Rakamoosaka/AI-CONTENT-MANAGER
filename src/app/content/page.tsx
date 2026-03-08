@@ -77,9 +77,16 @@ export default function ContentPage() {
 
   const [assignments, setAssignments] = useState<Array<{ articleId: string; categoryId: string | null }>>([]);
 
+  const totalItems = data?.meta.total ?? 0;
+  const currentPage = data?.meta.page ?? page;
+  const pageSize = data?.meta.pageSize ?? 10;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const rangeStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const rangeEnd = totalItems === 0 ? 0 : Math.min(currentPage * pageSize, totalItems);
+
   return (
     <div className="space-y-5">
-      <section className="glass-card rounded-3xl p-5">
+      <section className="glass-card relative z-20 rounded-3xl p-5">
         <div className="grid gap-2 md:grid-cols-4">
           <div>
             <FieldLabel
@@ -113,7 +120,7 @@ export default function ContentPage() {
         </div>
       </section>
 
-      <section className="glass-card rounded-3xl p-5">
+      <section className="glass-card relative z-10 rounded-3xl p-5">
         <div className="overflow-x-auto rounded-2xl border border-(--line) bg-(--bg-surface)/85 p-2">
         <table className="min-w-full text-sm">
           <thead>
@@ -175,7 +182,12 @@ export default function ContentPage() {
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-(--ink-soft)">Total: {data?.meta.total ?? 0}</p>
+          <div className="text-sm text-(--ink-soft)">
+            <p>Total: {totalItems}</p>
+            <p>
+              Page {currentPage} of {totalPages} | Showing {rangeStart}-{rangeEnd}
+            </p>
+          </div>
           <div className="flex gap-2">
             <button
               className="rounded-lg border border-(--line) px-3 py-1"
@@ -186,7 +198,7 @@ export default function ContentPage() {
             </button>
             <button
               className="rounded-lg border border-(--line) px-3 py-1"
-              disabled={(data?.meta.page ?? 1) * (data?.meta.pageSize ?? 10) >= (data?.meta.total ?? 0)}
+              disabled={currentPage >= totalPages}
               onClick={() => setPage((prev) => prev + 1)}
             >
               Next
