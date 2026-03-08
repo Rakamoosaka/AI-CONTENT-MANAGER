@@ -9,7 +9,7 @@ import {
   useCategories,
   useDeleteArticle,
 } from "@/features/content/list/hooks";
-import { useAiAction } from "@/features/ai/hooks";
+import { apiMutation } from "@/lib/api/client";
 import { formatDate } from "@/lib/utils";
 import { SelectField } from "@/components/ui/SelectField";
 
@@ -39,24 +39,14 @@ export default function ContentPage() {
   const [categoryId, setCategoryId] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
-  const [showBulk, setShowBulk] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeletePending, setIsDeletePending] = useState(false);
+  const [isBulkAiCategorizing, setIsBulkAiCategorizing] = useState(false);
 
   const { data: categories } = useCategories();
   const { data } = useArticles({ search, status, categoryId, page, pageSize: 10 });
   const deleteMutation = useDeleteArticle();
   const bulkMutation = useBulkCategorize();
-  const categorizeMutation = useAiAction<{
-    categoryId: string | null;
-    confidence: number;
-    rationale: string;
-  }>();
-
-  const selectedRows = useMemo(
-    () => data?.data.filter((item) => selected.includes(item.id)) ?? [],
-    [data?.data, selected],
-  );
 
   const statusOptions = useMemo(
     () => [
@@ -74,8 +64,6 @@ export default function ContentPage() {
     ],
     [categories],
   );
-
-  const [assignments, setAssignments] = useState<Array<{ articleId: string; categoryId: string | null }>>([]);
 
   const totalItems = data?.meta.total ?? 0;
   const currentPage = data?.meta.page ?? page;
@@ -211,31 +199,81 @@ export default function ContentPage() {
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-(--line) bg-(--bg-surface) px-4 py-2 text-sm text-(--ink) shadow-xl">
           {selected.length} selected
           <button
-            className="ml-3 rounded-full bg-(--amber) px-3 py-1 text-(--ink)"
+            className="ml-3 inline-flex items-center gap-2 rounded-full bg-(--amber) px-3 py-1 text-(--ink)"
+            disabled={isBulkAiCategorizing || bulkMutation.isPending || !categories?.length}
             onClick={async () => {
+              if (!categories?.length) {
+                toast.error("No categories available");
+                return;
+              }
+
               const rows = data?.data.filter((item) => selected.includes(item.id)) ?? [];
-              const suggested = await Promise.all(
-                rows.map(async (row) => {
-                  const ai = await categorizeMutation.mutateAsync({
-                    action: "categorize",
-                    input: {
-                      body: row.body,
-                      categories: categories ?? [],
-                    },
-                  });
+              if (!rows.length) {
+                toast.error("No selected rows on this page");
+                return;
+              }
 
-                  return {
-                    articleId: row.id,
-                    categoryId: ai.categoryId,
-                  };
-                }),
-              );
+              try {
+                setIsBulkAiCategorizing(true);
 
-              setAssignments(suggested);
-              setShowBulk(true);
+                const results = await Promise.allSettled(
+                  rows.map((row) =>
+                    apiMutation<{ categoryId: string | null; confidence: number; rationale: string }>(
+                      "/api/agent",
+                      "POST",
+                      {
+                        action: "categorize",
+                        input: {
+                          body: row.body,
+                          categories,
+                        },
+                      },
+                    ),
+                  ),
+                );
+
+                const assignments = results
+                  .map((result, index) => {
+                    if (result.status !== "fulfilled") {
+                      return null;
+                    }
+
+                    return {
+                      articleId: rows[index].id,
+                      categoryId: result.value.categoryId,
+                    };
+                  })
+                  .filter((item): item is { articleId: string; categoryId: string | null } => Boolean(item));
+
+                if (!assignments.length) {
+                  toast.error("AI categorization failed for selected articles");
+                  return;
+                }
+
+                await bulkMutation.mutateAsync(assignments);
+                setSelected((prev) => prev.filter((id) => !rows.some((row) => row.id === id)));
+
+                const failedCount = results.length - assignments.length;
+                if (failedCount > 0) {
+                  toast.success(`Updated ${assignments.length} articles. ${failedCount} failed.`);
+                } else {
+                  toast.success(`Updated ${assignments.length} article categories`);
+                }
+              } catch {
+                toast.error("Bulk AI categorization failed");
+              } finally {
+                setIsBulkAiCategorizing(false);
+              }
             }}
           >
-            Categorize selected
+            {isBulkAiCategorizing || bulkMutation.isPending ? (
+              <>
+                <span className="loading-spinner" aria-hidden="true" />
+                Categorizing...
+              </>
+            ) : (
+              "Categorize selected with AI"
+            )}
           </button>
           <button
             className="ml-2 rounded-full border border-(--line) bg-white px-3 py-1 text-(--danger)"
@@ -243,66 +281,6 @@ export default function ContentPage() {
           >
             Delete selected
           </button>
-        </div>
-      ) : null}
-
-      {showBulk ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-          <div className="glass-card max-h-[80vh] w-full max-w-2xl overflow-auto rounded-3xl p-4">
-            <h3 className="font-display text-xl font-semibold">Bulk categorization</h3>
-            <div className="mt-3 space-y-2">
-              {selectedRows.map((row) => {
-                const value = assignments.find((item) => item.articleId === row.id)?.categoryId ?? "";
-                return (
-                  <div key={row.id} className="grid gap-2 rounded-lg border border-(--line) p-2 md:grid-cols-[2fr_1fr]">
-                    <p className="text-sm">{row.title}</p>
-                    <SelectField
-                      value={value ?? ""}
-                      onChange={(nextValue) => {
-                        setAssignments((prev) =>
-                          prev.map((item) =>
-                            item.articleId === row.id
-                              ? {
-                                  ...item,
-                                  categoryId: nextValue || null,
-                                }
-                              : item,
-                          ),
-                        );
-                      }}
-                      options={[
-                        { value: "", label: "No category" },
-                        ...(categories?.map((category) => ({
-                          value: category.id,
-                          label: category.name,
-                        })) ?? []),
-                      ]}
-                      className="text-sm"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                className="rounded-lg border border-(--line) px-3 py-2"
-                onClick={() => setShowBulk(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="rounded-lg bg-(--teal) px-3 py-2 text-white"
-                onClick={async () => {
-                  await bulkMutation.mutateAsync(assignments);
-                  toast.success("Bulk categorization saved");
-                  setShowBulk(false);
-                  setSelected([]);
-                }}
-              >
-                Save
-              </button>
-            </div>
-          </div>
         </div>
       ) : null}
 
