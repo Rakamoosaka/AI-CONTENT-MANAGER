@@ -1,0 +1,10 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+"typescript.enablePromptUseWorkspaceTsdk": false,
+"chat.tools.terminal.autoApprove": {
+    "/^cd \"c:/codingProjects/AI CONTENT MANAGER\" && npx tsc --noEmit --pretty false$/": {
+        "approve": true,
+        "matchCommandLine": true
+    }
+}
+}

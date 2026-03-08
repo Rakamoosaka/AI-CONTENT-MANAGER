@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #eef2f8;
+  --bg-surface: #f9fbff;
+  --bg-soft: #edf4ff;
+  --teal: #355872;
+  --amber: #7aaace;
+  --line: #dbe6f4;
+  --ink: #233548;
+  --ink-soft: #60768f;
+  --accent-cyan: #9cd5ff;
+  --accent-lilac: #c8cff9;
+  --danger: #be123c;
+  --shadow-soft: 0 18px 48px -30px rgba(31, 56, 88, 0.42);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 8% 4%, rgba(122, 170, 206, 0.22), transparent 36%),
+    radial-gradient(circle at 92% 8%, rgba(156, 213, 255, 0.24), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(200, 207, 249, 0.18), transparent 38%),
+    var(--bg-base);
+  color: var(--ink);
+  font-family: var(--font-body), sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), sans-serif;
+}
+
+@keyframes pulse-sheen {
+  0% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.35;
+  }
+}
+
+.ai-pulse {
+  animation: pulse-sheen 1.3s ease-in-out infinite;
+}
+
+.card {
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-surface) 94%, white);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.form-control {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-surface) 92%, white);
+  border-radius: 0.85rem;
+  padding: 0.56rem 0.72rem;
+}
+
+.glass-card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(246, 250, 255, 0.8));
+  border: 1px solid color-mix(in srgb, var(--line) 88%, white);
+  box-shadow: 0 24px 60px -40px rgba(36, 68, 102, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.accent-panel {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(156, 213, 255, 0.4), transparent 42%),
+    radial-gradient(circle at 80% 0%, rgba(200, 207, 249, 0.45), transparent 36%),
+    color-mix(in srgb, var(--bg-surface) 92%, white);
+}
+
+.select-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b6666' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 0.85rem;
+  padding-right: 2.2rem;
+}
+
+.select-field:focus {
+  outline: 2px solid color-mix(in srgb, var(--teal) 60%, white);
+  outline-offset: 1px;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--teal) 55%, white);
+  outline-offset: 2px;
+}
+
+button:not(:disabled),
+input[type="button"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="reset"]:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+button:not(:disabled):hover,
+input[type="button"]:not(:disabled):hover,
+input[type="submit"]:not(:disabled):hover,
+input[type="reset"]:not(:disabled):hover,
+[role="button"]:not([aria-disabled="true"]):hover {
+  filter: brightness(0.98);
+}
+
+button:not(:disabled):active,
+input[type="button"]:not(:disabled):active,
+input[type="submit"]:not(:disabled):active,
+input[type="reset"]:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: translateY(1px);
+}

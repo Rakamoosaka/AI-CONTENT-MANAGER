@@ -1,0 +1,148 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo } from "react";
+import { useDashboardStats } from "@/features/content/list/hooks";
+import { formatDate } from "@/lib/utils";
+
+export default function Home() {
+  const { data, isLoading } = useDashboardStats();
+
+  const summary = [
+    { label: "Total Articles", value: data?.totalArticles ?? 0 },
+    { label: "Published", value: data?.published ?? 0 },
+    { label: "Drafts", value: data?.drafts ?? 0 },
+  ];
+
+  const chartRows = useMemo(() => {
+    const rows = data?.categoriesDistribution ?? [];
+    const max = Math.max(...rows.map((item) => item.total), 1);
+    return rows.map((item) => ({
+      ...item,
+      height: Math.max(12, Math.round((item.total / max) * 120)),
+    }));
+  }, [data?.categoriesDistribution]);
+
+  return (
+    <div className="space-y-5">
+      <section className="glass-card accent-panel rounded-[28px] p-5 md:p-7">
+        <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-(--ink-soft)">Dashboard</p>
+            <h1 className="font-display mt-2 max-w-xl text-3xl font-semibold leading-tight md:text-4xl">
+              Content operations overview with live editorial momentum.
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm text-(--ink-soft)">
+              Track delivery health, publication balance, and category performance in one ambient control surface.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href="/content/new"
+                className="rounded-xl bg-(--teal) px-4 py-2 text-sm font-semibold text-white"
+              >
+                Create Article
+              </Link>
+              <Link
+                href="/content"
+                className="rounded-xl border border-(--line) bg-white/80 px-4 py-2 text-sm font-semibold"
+              >
+                Open Content Queue
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            {summary.map((item) => (
+              <article key={item.label} className="glass-card rounded-2xl p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-(--ink-soft)">{item.label}</p>
+                <p className="font-display mt-2 text-3xl font-bold">
+                  {isLoading ? "..." : item.value}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
+        <section className="glass-card rounded-3xl p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl font-semibold">Category Pulse</h2>
+            <p className="text-xs uppercase tracking-[0.14em] text-(--ink-soft)">Live mix</p>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-(--line) bg-white/70 p-4">
+            <div className="flex h-40 items-end gap-3">
+              {chartRows.map((item, idx) => (
+                <div key={item.categoryId} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                  <div className="text-xs font-medium text-(--ink-soft)">{item.total}</div>
+                  <div
+                    className="w-full rounded-t-lg"
+                    style={{
+                      height: `${item.height}px`,
+                      background:
+                        idx % 2 === 0
+                          ? "linear-gradient(180deg, #9cd5ff 0%, #7aaace 100%)"
+                          : "linear-gradient(180deg, #c8cff9 0%, #7aaace 100%)",
+                    }}
+                  />
+                  <p className="w-full truncate text-center text-[11px] text-(--ink-soft)">{item.categoryName}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="glass-card rounded-3xl p-5">
+          <h2 className="font-display text-xl font-semibold">Category distribution</h2>
+          <ul className="mt-4 space-y-2">
+            {data?.categoriesDistribution.map((item) => (
+              <li
+                key={item.categoryId}
+                className="flex items-center justify-between rounded-xl border border-(--line) bg-white/75 px-3 py-2"
+              >
+                <span className="text-sm">{item.categoryName}</span>
+                <span className="rounded-full bg-(--bg-soft) px-2 py-1 text-xs font-semibold text-(--ink-soft)">
+                  {item.total}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <section className="glass-card rounded-3xl p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-semibold">Latest articles</h2>
+          <p className="text-xs uppercase tracking-[0.14em] text-(--ink-soft)">Recent activity</p>
+        </div>
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-(--line) bg-white/80 p-2">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-(--ink-soft)">
+                <th className="py-2">Title</th>
+                <th>Status</th>
+                <th>Locale</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.latest.map((item) => (
+                <tr key={item.id} className="border-t border-(--line)">
+                  <td className="py-2">
+                    <Link href={`/content/${item.id}`} className="font-medium hover:text-(--teal)">
+                      {item.title}
+                    </Link>
+                  </td>
+                  <td>{item.status}</td>
+                  <td>{item.locale}</td>
+                  <td>{formatDate(item.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}
