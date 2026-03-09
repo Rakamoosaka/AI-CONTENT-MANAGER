@@ -520,7 +520,7 @@ export function EditorFormPanel({
               onKeyDown={handleBodyKeyDown}
             />
           ) : (
-            <div className="form-control min-h-80 min-w-0 space-y-3 overflow-auto leading-relaxed">
+            <div className="form-control min-h-80 min-w-0 space-y-3 overflow-auto overflow-x-hidden leading-relaxed">
               <MarkdownPreview markdown={form.body} t={t} />
             </div>
           )}
@@ -660,7 +660,10 @@ function MarkdownPreview({
 
     if (trimmedLine.startsWith("### ")) {
       blocks.push(
-        <h3 key={`h3-${index}`} className="font-display text-xl font-semibold">
+        <h3
+          key={`h3-${index}`}
+          className="font-display text-lg font-semibold sm:text-xl"
+        >
           {renderInlineMarkdown(trimmedLine.slice(4))}
         </h3>,
       );
@@ -670,7 +673,10 @@ function MarkdownPreview({
 
     if (trimmedLine.startsWith("## ")) {
       blocks.push(
-        <h2 key={`h2-${index}`} className="font-display text-2xl font-semibold">
+        <h2
+          key={`h2-${index}`}
+          className="font-display text-xl font-semibold sm:text-2xl"
+        >
           {renderInlineMarkdown(trimmedLine.slice(3))}
         </h2>,
       );
@@ -691,7 +697,7 @@ function MarkdownPreview({
         }
 
         listItems.push(
-          <li key={`ol-item-${orderedCursor}`}>
+          <li key={`ol-item-${orderedCursor}`} className="wrap-break-word">
             {renderInlineMarkdown(match[1])}
           </li>,
         );
@@ -719,7 +725,7 @@ function MarkdownPreview({
         }
 
         listItems.push(
-          <li key={`ul-item-${bulletCursor}`}>
+          <li key={`ul-item-${bulletCursor}`} className="wrap-break-word">
             {renderInlineMarkdown(line.slice(2))}
           </li>,
         );
@@ -739,7 +745,7 @@ function MarkdownPreview({
       blocks.push(
         <blockquote
           key={`quote-${index}`}
-          className="border-l-2 border-(--line) pl-3 text-(--ink-soft)"
+          className="wrap-break-word border-l-2 border-(--line) pl-3 text-(--ink-soft)"
         >
           {renderInlineMarkdown(trimmedLine.slice(2))}
         </blockquote>,
@@ -772,7 +778,7 @@ function MarkdownPreview({
     }
 
     blocks.push(
-      <p key={`p-${index}`} className="text-sm leading-relaxed">
+      <p key={`p-${index}`} className="wrap-break-word text-sm leading-relaxed">
         {renderInlineMarkdown(paragraphLines.join(" "))}
       </p>,
     );
@@ -813,7 +819,7 @@ function renderInlineMarkdown(value: string): ReactNode[] {
       nodes.push(
         <code
           key={`code-inline-${match.index}`}
-          className="rounded bg-(--bg-soft) px-1 py-0.5 text-[0.85em]"
+          className="rounded bg-(--bg-soft) px-1 py-0.5 text-[0.85em] break-all"
         >
           {token.slice(1, -1)}
         </code>,
@@ -825,7 +831,7 @@ function renderInlineMarkdown(value: string): ReactNode[] {
         nodes.push(
           <a
             key={`link-${match.index}`}
-            className="underline decoration-(--teal) decoration-1 underline-offset-2"
+            className="wrap-break-word break-all underline decoration-(--teal) decoration-1 underline-offset-2"
             href={linkMatch[2]}
             rel="noreferrer"
             target="_blank"

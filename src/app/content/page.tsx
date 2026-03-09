@@ -14,6 +14,7 @@ import { BulkActionsBar } from "@/features/content/list/components/BulkActionsBa
 import { ContentFilters } from "@/features/content/list/components/ContentFilters";
 import { ContentTable } from "@/features/content/list/components/ContentTable";
 import { DeleteConfirmModal } from "@/features/content/list/components/DeleteConfirmModal";
+import { ArticlePreviewModal } from "../../features/content/list/components/ArticlePreviewModal";
 
 export default function ContentPage() {
   const { t } = useI18n();
@@ -25,6 +26,7 @@ export default function ContentPage() {
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeletePending, setIsDeletePending] = useState(false);
   const [isBulkAiCategorizing, setIsBulkAiCategorizing] = useState(false);
+  const [previewArticleId, setPreviewArticleId] = useState<string | null>(null);
 
   const { data: categories } = useCategories();
   const { data } = useArticles({
@@ -192,6 +194,7 @@ export default function ContentPage() {
             setSelected((prev) => prev.filter((value) => value !== id));
           }}
           onDeleteRow={(id) => setDeleteTargetIds([id])}
+          onOpenPreview={setPreviewArticleId}
         />
 
         <div className="mt-4 flex items-center justify-between">
@@ -238,6 +241,11 @@ export default function ContentPage() {
         isPending={isDeletePending}
         onCancel={() => setDeleteTargetIds([])}
         onConfirm={handleDeleteTargets}
+      />
+
+      <ArticlePreviewModal
+        articleId={previewArticleId}
+        onClose={() => setPreviewArticleId(null)}
       />
     </div>
   );

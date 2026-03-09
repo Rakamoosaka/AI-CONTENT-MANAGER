@@ -59,27 +59,36 @@ export default function CategoriesPage() {
       </div>
 
       <section className="glass-card rounded-3xl p-5">
-        <div className="overflow-x-auto rounded-2xl border border-(--line) bg-(--bg-surface)/85 p-2 md:overflow-visible">
-          <table className="min-w-175 text-sm md:min-w-full md:table-fixed">
+        <div className="overflow-x-auto rounded-2xl border border-(--line) bg-(--bg-surface)/85 p-2">
+          <table className="min-w-195 w-full table-auto text-sm [&_th]:px-2 [&_td]:px-2">
             <thead>
               <tr className="text-left text-(--ink-soft)">
-                <th className="py-2 md:w-1/6">{t("categories.col.name")}</th>
-                <th className="md:w-1/6">{t("categories.col.slug")}</th>
-                <th className="md:w-16">{t("categories.col.inUse")}</th>
-                <th>{t("categories.col.description")}</th>
-                <th className="md:w-28" />
+                <th className="py-2 align-top">{t("categories.col.name")}</th>
+                <th className="align-top">{t("categories.col.slug")}</th>
+                <th className="whitespace-nowrap md:w-28">
+                  {t("categories.col.inUse")}
+                </th>
+                <th className="pl-3 align-top">
+                  {t("categories.col.description")}
+                </th>
+                <th className="w-48 min-w-48" />
               </tr>
             </thead>
             <tbody>
               {categories?.map((item) => (
                 <tr key={item.id} className="border-t border-(--line)">
-                  <td className="py-2">{item.name}</td>
-                  <td className="break-all pr-2">{item.slug}</td>
-                  <td>{item.articleCount ?? 0}</td>
-                  <td className="wrap-break-word pr-2">{item.description}</td>
-                  <td>
-                    <div className="flex justify-end gap-3">
+                  <td className="py-2 align-top wrap-anywhere">{item.name}</td>
+                  <td className="pr-2 align-top wrap-anywhere">{item.slug}</td>
+                  <td className="whitespace-nowrap align-top">
+                    {item.articleCount ?? 0}
+                  </td>
+                  <td className="pl-3 pr-2 align-top wrap-anywhere">
+                    {item.description}
+                  </td>
+                  <td className="min-w-48 align-top">
+                    <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
                       <button
+                        className="shrink-0 whitespace-nowrap"
                         onClick={() => {
                           setEditing(item);
                           setOpen(true);
@@ -90,7 +99,7 @@ export default function CategoriesPage() {
                       {(item.articleCount ?? 0) > 0 ? (
                         <span className="group relative inline-flex">
                           <button
-                            className="cursor-not-allowed text-(--danger) opacity-50"
+                            className="cursor-not-allowed whitespace-nowrap text-(--danger) opacity-50"
                             disabled
                             aria-disabled="true"
                           >
@@ -102,7 +111,7 @@ export default function CategoriesPage() {
                         </span>
                       ) : (
                         <button
-                          className="text-(--danger)"
+                          className="shrink-0 whitespace-nowrap text-(--danger)"
                           onClick={() => setDeletingCategory(item)}
                         >
                           {t("common.delete")}

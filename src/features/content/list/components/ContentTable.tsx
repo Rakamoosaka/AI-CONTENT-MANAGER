@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { formatDate } from "@/lib/utils";
 import type { Article } from "@/features/content/list/types";
@@ -12,6 +10,7 @@ type Props = {
   onToggleAll: (checked: boolean) => void;
   onToggleRow: (id: string, checked: boolean) => void;
   onDeleteRow: (id: string) => void;
+  onOpenPreview: (id: string) => void;
 };
 
 export function ContentTable({
@@ -21,6 +20,7 @@ export function ContentTable({
   onToggleAll,
   onToggleRow,
   onDeleteRow,
+  onOpenPreview,
 }: Props) {
   const { t } = useI18n();
 
@@ -65,12 +65,12 @@ export function ContentTable({
                 />
               </td>
               <td className="pr-2 align-middle wrap-break-word">
-                <Link
-                  href={`/content/${item.id}`}
-                  className="font-medium wrap-break-word hover:text-(--teal)"
+                <button
+                  className="cursor-pointer text-left font-medium wrap-break-word hover:text-(--teal)"
+                  onClick={() => onOpenPreview(item.id)}
                 >
                   {item.title}
-                </Link>
+                </button>
               </td>
               <td className="pr-2 align-middle wrap-break-word">
                 {item.categoryName ?? "-"}

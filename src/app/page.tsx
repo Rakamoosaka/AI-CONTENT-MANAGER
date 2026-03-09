@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { ArticlePreviewModal } from "@/features/content/list/components/ArticlePreviewModal";
 import { useDashboardStats } from "@/features/content/list/hooks";
 import { formatDate } from "@/lib/utils";
 
 export default function Home() {
   const { t } = useI18n();
   const { data, isLoading } = useDashboardStats();
+  const [previewArticleId, setPreviewArticleId] = useState<string | null>(null);
 
   const chartPalette = [
     "linear-gradient(180deg, #c3d4a0 0%, #8fa160 100%)",
@@ -33,7 +35,7 @@ export default function Home() {
   }, [data?.categoriesDistribution]);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5 overflow-x-hidden">
       <section className="glass-card accent-panel rounded-[28px] p-5 md:p-7">
         <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
           <div>
@@ -77,9 +79,9 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
-        <section className="glass-card rounded-3xl p-5">
-          <div className="flex items-center justify-between">
+      <div className="min-w-0 grid gap-5 xl:grid-cols-[1.35fr_1fr]">
+        <section className="glass-card min-w-0 rounded-3xl p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl font-semibold">
               {t("dashboard.categoryPulse")}
             </h2>
@@ -88,18 +90,18 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-(--line) bg-white/70 p-4">
-            <div className="flex h-40 items-end gap-3">
+          <div className="mt-5 w-full max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-(--line) bg-white/70 p-4">
+            <div className="flex h-40 w-max min-w-full items-end gap-3">
               {chartRows.map((item, idx) => (
                 <div
                   key={item.categoryId}
-                  className="flex min-w-0 flex-1 flex-col items-center gap-2"
+                  className="flex w-16 shrink-0 flex-col items-center gap-2"
                 >
                   <div className="text-xs font-medium text-(--ink-soft)">
                     {item.total}
                   </div>
                   <div
-                    className="w-full rounded-t-lg"
+                    className="w-full rounded-t-xl"
                     style={{
                       height: `${item.height}px`,
                       background: chartPalette[idx % chartPalette.length],
@@ -114,7 +116,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="glass-card rounded-3xl p-5">
+        <section className="glass-card min-w-0 rounded-3xl p-5">
           <h2 className="font-display text-xl font-semibold">
             {t("dashboard.categoryDistribution")}
           </h2>
@@ -122,10 +124,12 @@ export default function Home() {
             {data?.categoriesDistribution.map((item) => (
               <li
                 key={item.categoryId}
-                className="flex items-center justify-between rounded-xl border border-(--line) bg-white/75 px-3 py-2"
+                className="flex items-start justify-between gap-2 rounded-xl border border-(--line) bg-white/75 px-3 py-2"
               >
-                <span className="text-sm">{item.categoryName}</span>
-                <span className="rounded-full bg-(--bg-soft) px-2 py-1 text-xs font-semibold text-(--ink-soft)">
+                <span className="min-w-0 flex-1 break-all text-sm">
+                  {item.categoryName}
+                </span>
+                <span className="shrink-0 rounded-full bg-(--bg-soft) px-2 py-1 text-xs font-semibold text-(--ink-soft)">
                   {item.total}
                 </span>
               </li>
@@ -163,12 +167,12 @@ export default function Home() {
               {data?.latest.map((item) => (
                 <tr key={item.id} className="border-t border-(--line)">
                   <td className="py-2 pr-2 align-middle">
-                    <Link
-                      href={`/content/${item.id}`}
-                      className="font-medium hover:text-(--teal)"
+                    <button
+                      className="cursor-pointer text-left font-medium hover:text-(--teal)"
+                      onClick={() => setPreviewArticleId(item.id)}
                     >
                       {item.title}
-                    </Link>
+                    </button>
                   </td>
                   <td className="whitespace-nowrap align-middle">
                     {item.status === "published"
@@ -187,6 +191,11 @@ export default function Home() {
           </table>
         </div>
       </section>
+
+      <ArticlePreviewModal
+        articleId={previewArticleId}
+        onClose={() => setPreviewArticleId(null)}
+      />
     </div>
   );
 }

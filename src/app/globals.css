@@ -325,6 +325,124 @@ summary:focus-visible {
   animation: beacon 2s ease-in-out infinite;
 }
 
+[data-sonner-toaster] {
+  --normal-bg: color-mix(in srgb, var(--bg-surface) 96%, white);
+  --normal-text: var(--ink);
+  --normal-border: color-mix(in srgb, var(--line) 84%, white);
+  --success-bg: color-mix(in srgb, var(--bg-surface) 94%, #eef7dd);
+  --success-border: color-mix(in srgb, var(--teal) 22%, var(--line));
+  --error-bg: color-mix(in srgb, var(--bg-surface) 94%, #fce7ea);
+  --error-border: color-mix(in srgb, var(--danger) 34%, var(--line));
+  --info-bg: color-mix(in srgb, var(--bg-surface) 94%, #edf5f2);
+  --info-border: color-mix(in srgb, var(--teal) 24%, var(--line));
+  --warning-bg: color-mix(in srgb, var(--bg-surface) 94%, #f9f1da);
+  --warning-border: color-mix(in srgb, var(--amber) 42%, var(--line));
+}
+
+[data-sonner-toaster] [data-sonner-toast].app-toast {
+  border-radius: 1rem;
+  border: 1px solid var(--normal-border);
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.86),
+    color-mix(in srgb, var(--bg-surface) 92%, white)
+  );
+  color: var(--normal-text);
+  box-shadow: 0 20px 44px -26px rgba(65, 67, 27, 0.45);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-body), sans-serif;
+}
+
+[data-sonner-toaster] .app-toast-title {
+  font-family: var(--font-display), serif;
+  font-size: 0.98rem;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+[data-sonner-toaster] .app-toast-description {
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+[data-sonner-toaster] .app-toast-close {
+  border-color: color-mix(in srgb, var(--line) 86%, white) !important;
+  background: color-mix(in srgb, var(--bg-surface) 90%, white) !important;
+  color: var(--ink-soft) !important;
+}
+
+[data-sonner-toaster] .app-toast-action,
+[data-sonner-toaster] .app-toast-cancel {
+  border-radius: 9999px !important;
+  border: 1px solid color-mix(in srgb, var(--line) 84%, white) !important;
+  font-family: var(--font-body), sans-serif !important;
+  font-size: 0.8rem !important;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+[data-sonner-toaster] .app-toast-action {
+  background: var(--teal) !important;
+  color: var(--bg-surface) !important;
+}
+
+[data-sonner-toaster] .app-toast-cancel {
+  background: color-mix(in srgb, var(--bg-surface) 92%, white) !important;
+  color: var(--ink) !important;
+}
+
+[data-sonner-toaster] .app-toast-action:hover {
+  background: color-mix(in srgb, var(--teal) 88%, black) !important;
+}
+
+[data-sonner-toaster] .app-toast-cancel:hover {
+  border-color: color-mix(in srgb, var(--teal) 36%, var(--line)) !important;
+  background: color-mix(in srgb, var(--bg-soft) 82%, white) !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast].app-toast-success,
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.82),
+    var(--success-bg)
+  );
+  border-color: var(--success-border);
+}
+
+[data-sonner-toaster] [data-sonner-toast].app-toast-error,
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.8),
+    var(--error-bg)
+  );
+  border-color: var(--error-border);
+}
+
+[data-sonner-toaster] [data-sonner-toast].app-toast-info,
+[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.8), var(--info-bg));
+  border-color: var(--info-border);
+}
+
+[data-sonner-toaster] [data-sonner-toast].app-toast-warning,
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.82),
+    var(--warning-bg)
+  );
+  border-color: var(--warning-border);
+}
+
+[data-sonner-toaster] [data-sonner-toast].app-toast-loading,
+[data-sonner-toaster] [data-sonner-toast][data-type="loading"] {
+  border-color: color-mix(in srgb, var(--teal) 24%, var(--line));
+}
+
 .scan-divider {
   position: relative;
 }
