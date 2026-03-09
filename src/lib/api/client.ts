@@ -55,8 +55,8 @@ function toApiRequestError(res: Response, payload: unknown) {
   );
 }
 
-export async function apiGet<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+export async function apiGet<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, init);
   const json = await readJsonBody(res);
   if (!res.ok) throw toApiRequestError(res, json);
   return (json as { data: T }).data;

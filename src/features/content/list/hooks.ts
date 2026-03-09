@@ -28,7 +28,7 @@ export function useCategories() {
 export function useDashboardStats() {
   return useQuery({
     queryKey: contentKeys.dashboard(),
-    queryFn: () => apiGet<DashboardStats>("/api/dashboard"),
+    queryFn: () => apiGet<DashboardStats>("/api/dashboard", { cache: "no-store" }),
   });
 }
 

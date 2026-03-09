@@ -16,8 +16,14 @@ Mini CMS built with Next.js App Router, React Query, Drizzle + SQLite, and integ
 
 Copy `.env.example` to `.env.local` and set values:
 
-- `OPENAI_API_KEY` (if you later switch tool execution to a live provider)
 - `DATABASE_URL=file:./sqlite.db`
+- `OPENROUTER_API_KEY=...`
+- `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1` (optional, default is set in code)
+- `OPENROUTER_MODEL=qwen/qwen3.5-flash-02-23` (optional, default is set in code)
+- `AI_ACTION_TIMEOUT_MS=90000` (optional, clamped to 10_000..180_000)
+
+Current AI provider: OpenRouter (OpenAI-compatible API via `@ai-sdk/openai-compatible`).
+Current default model: `qwen/qwen3.5-flash-02-23`.
 
 ## Commands
 
@@ -53,3 +59,14 @@ npm run dev
 - AI generation shows pulsing overlay on the body textarea.
 - Translation flow asks whether to replace or create a copy.
 - Bulk categorize modal allows per-row category edits before save.
+
+## Architecture (Short)
+
+- App Router (`src/app/*`) is used for pages and API route handlers (`src/app/api/*`).
+- React Query (`src/features/**/hooks.ts`) handles client-side fetching, cache, and invalidation after mutations.
+- Drizzle + SQLite (`src/lib/db/*`, `drizzle/*`) implement schema, queries, and migrations.
+- Mastra-style AI orchestration (`src/mastra/*`) routes actions through one typed agent entrypoint with four tools:
+  - `generateContent`
+  - `categorize`
+  - `seoSuggestions`
+  - `translateContent`

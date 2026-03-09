@@ -33,6 +33,14 @@ const nav: Array<{
 
 type Props = { children: React.ReactNode };
 
+function AppShellFallback() {
+  return (
+    <div className="min-h-screen bg-(--bg-base) p-4 text-(--ink-soft)">
+      <div className="card p-4 text-sm">Loading shell...</div>
+    </div>
+  );
+}
+
 function ShellNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -70,7 +78,7 @@ function ShellPath() {
   return <p className="text-sm text-(--ink-soft)">{pathname}</p>;
 }
 
-export function AppShell({ children }: Props) {
+function AppShellInner({ children }: Props) {
   const pathname = usePathname();
   const { t, locale, setLocale, localeOptions } = useI18n();
   const [mobileNavOpenedOnPath, setMobileNavOpenedOnPath] = useState<
@@ -220,5 +228,13 @@ export function AppShell({ children }: Props) {
         </aside>
       </div>
     </div>
+  );
+}
+
+export function AppShell({ children }: Props) {
+  return (
+    <Suspense fallback={<AppShellFallback />}>
+      <AppShellInner>{children}</AppShellInner>
+    </Suspense>
   );
 }
