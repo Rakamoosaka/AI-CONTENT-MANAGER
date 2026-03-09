@@ -25,7 +25,7 @@ function FieldLabel({ text, tip }: { text: string; tip: string }) {
         >
           ?
         </button>
-        <span className="pointer-events-none absolute left-6 top-1/2 z-20 w-64 -translate-y-1/2 rounded-lg border border-(--line) bg-(--bg-surface) p-2 text-xs font-normal text-(--ink) opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <span className="pointer-events-none absolute left-6 top-1/2 z-20 hidden w-64 max-w-[calc(100vw-2rem)] -translate-y-1/2 rounded-lg border border-(--line) bg-(--bg-surface) p-2 text-xs font-normal text-(--ink) shadow-lg group-hover:block group-focus-within:block">
           {tip}
         </span>
       </span>
@@ -44,7 +44,13 @@ export default function ContentPage() {
   const [isBulkAiCategorizing, setIsBulkAiCategorizing] = useState(false);
 
   const { data: categories } = useCategories();
-  const { data } = useArticles({ search, status, categoryId, page, pageSize: 10 });
+  const { data } = useArticles({
+    search,
+    status,
+    categoryId,
+    page,
+    pageSize: 10,
+  });
   const deleteMutation = useDeleteArticle();
   const bulkMutation = useBulkCategorize();
 
@@ -60,7 +66,10 @@ export default function ContentPage() {
   const categoryOptions = useMemo(
     () => [
       { value: "", label: "All categories" },
-      ...(categories?.map((category) => ({ value: category.id, label: category.name })) ?? []),
+      ...(categories?.map((category) => ({
+        value: category.id,
+        label: category.name,
+      })) ?? []),
     ],
     [categories],
   );
@@ -70,7 +79,8 @@ export default function ContentPage() {
   const pageSize = data?.meta.pageSize ?? 10;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const rangeStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const rangeEnd = totalItems === 0 ? 0 : Math.min(currentPage * pageSize, totalItems);
+  const rangeEnd =
+    totalItems === 0 ? 0 : Math.min(currentPage * pageSize, totalItems);
 
   return (
     <div className="space-y-5">
@@ -90,12 +100,26 @@ export default function ContentPage() {
             />
           </div>
           <div>
-            <FieldLabel text="Status" tip="Filter by draft or published articles." />
-            <SelectField value={status} onChange={setStatus} options={statusOptions} />
+            <FieldLabel
+              text="Status"
+              tip="Filter by draft or published articles."
+            />
+            <SelectField
+              value={status}
+              onChange={setStatus}
+              options={statusOptions}
+            />
           </div>
           <div>
-            <FieldLabel text="Category" tip="Show articles assigned to one category." />
-            <SelectField value={categoryId} onChange={setCategoryId} options={categoryOptions} />
+            <FieldLabel
+              text="Category"
+              tip="Show articles assigned to one category."
+            />
+            <SelectField
+              value={categoryId}
+              onChange={setCategoryId}
+              options={categoryOptions}
+            />
           </div>
           <div className="flex items-end">
             <Link
@@ -110,70 +134,93 @@ export default function ContentPage() {
 
       <section className="glass-card relative z-10 rounded-3xl p-5">
         <div className="overflow-x-auto rounded-2xl border border-(--line) bg-(--bg-surface)/85 p-2">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left text-(--ink-soft)">
-              <th className="py-2">
-                <input
-                  type="checkbox"
-                  checked={Boolean(data?.data.length) && selected.length === data?.data.length}
-                  onChange={(event) =>
-                    setSelected(event.target.checked ? (data?.data.map((item) => item.id) ?? []) : [])
-                  }
-                />
-              </th>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Locale</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {data?.data.map((item) => (
-              <tr key={item.id} className="border-t border-(--line)">
-                <td className="py-2">
+          <table className="min-w-232 text-sm md:min-w-full md:table-fixed [&_th]:px-3 [&_td]:px-3">
+            <thead>
+              <tr className="text-left text-(--ink-soft)">
+                <th className="w-10 py-2 text-center align-middle">
                   <input
                     type="checkbox"
-                    checked={selected.includes(item.id)}
-                    onChange={(event) => {
-                      if (event.target.checked) {
-                        setSelected((prev) => [...prev, item.id]);
-                      } else {
-                        setSelected((prev) => prev.filter((value) => value !== item.id));
-                      }
-                    }}
+                    className="ui-checkbox"
+                    checked={
+                      Boolean(data?.data.length) &&
+                      selected.length === data?.data.length
+                    }
+                    onChange={(event) =>
+                      setSelected(
+                        event.target.checked
+                          ? (data?.data.map((item) => item.id) ?? [])
+                          : [],
+                      )
+                    }
                   />
-                </td>
-                <td>
-                  <Link href={`/content/${item.id}`} className="font-medium hover:text-(--teal)">
-                    {item.title}
-                  </Link>
-                </td>
-                <td>{item.categoryName ?? "-"}</td>
-                <td>{item.status}</td>
-                <td>{formatDate(item.createdAt)}</td>
-                <td>{item.locale}</td>
-                <td>
-                  <button
-                    className="text-(--danger)"
-                    onClick={() => setDeleteTargetIds([item.id])}
-                  >
-                    Delete
-                  </button>
-                </td>
+                </th>
+                <th className="md:w-[40%]">Title</th>
+                <th className="md:w-[20%]">Category</th>
+                <th className="whitespace-nowrap md:w-[12%]">Status</th>
+                <th className="whitespace-nowrap md:w-[16%]">Created</th>
+                <th className="whitespace-nowrap md:w-[12%]">Locale</th>
+                <th className="md:w-16" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data?.data.map((item) => (
+                <tr key={item.id} className="border-t border-(--line)">
+                  <td className="py-2 text-center align-middle">
+                    <input
+                      type="checkbox"
+                      className="ui-checkbox"
+                      checked={selected.includes(item.id)}
+                      onChange={(event) => {
+                        if (event.target.checked) {
+                          setSelected((prev) => [...prev, item.id]);
+                        } else {
+                          setSelected((prev) =>
+                            prev.filter((value) => value !== item.id),
+                          );
+                        }
+                      }}
+                    />
+                  </td>
+                  <td className="pr-2 align-middle wrap-break-word">
+                    <Link
+                      href={`/content/${item.id}`}
+                      className="font-medium wrap-break-word hover:text-(--teal)"
+                    >
+                      {item.title}
+                    </Link>
+                  </td>
+                  <td className="pr-2 align-middle wrap-break-word">
+                    {item.categoryName ?? "-"}
+                  </td>
+                  <td className="whitespace-nowrap align-middle">
+                    {item.status}
+                  </td>
+                  <td className="whitespace-nowrap align-middle">
+                    {formatDate(item.createdAt)}
+                  </td>
+                  <td className="whitespace-nowrap align-middle">
+                    {item.locale}
+                  </td>
+                  <td className="whitespace-nowrap align-middle">
+                    <button
+                      className="text-(--danger)"
+                      onClick={() => setDeleteTargetIds([item.id])}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-(--ink-soft)">
             <p>Total: {totalItems}</p>
             <p>
-              Page {currentPage} of {totalPages} | Showing {rangeStart}-{rangeEnd}
+              Page {currentPage} of {totalPages} | Showing {rangeStart}-
+              {rangeEnd}
             </p>
           </div>
           <div className="flex gap-2">
@@ -200,14 +247,19 @@ export default function ContentPage() {
           {selected.length} selected
           <button
             className="ml-3 inline-flex items-center gap-2 rounded-full bg-(--amber) px-3 py-1 text-(--ink)"
-            disabled={isBulkAiCategorizing || bulkMutation.isPending || !categories?.length}
+            disabled={
+              isBulkAiCategorizing ||
+              bulkMutation.isPending ||
+              !categories?.length
+            }
             onClick={async () => {
               if (!categories?.length) {
                 toast.error("No categories available");
                 return;
               }
 
-              const rows = data?.data.filter((item) => selected.includes(item.id)) ?? [];
+              const rows =
+                data?.data.filter((item) => selected.includes(item.id)) ?? [];
               if (!rows.length) {
                 toast.error("No selected rows on this page");
                 return;
@@ -218,17 +270,17 @@ export default function ContentPage() {
 
                 const results = await Promise.allSettled(
                   rows.map((row) =>
-                    apiMutation<{ categoryId: string | null; confidence: number; rationale: string }>(
-                      "/api/agent",
-                      "POST",
-                      {
-                        action: "categorize",
-                        input: {
-                          body: row.body,
-                          categories,
-                        },
+                    apiMutation<{
+                      categoryId: string | null;
+                      confidence: number;
+                      rationale: string;
+                    }>("/api/agent", "POST", {
+                      action: "categorize",
+                      input: {
+                        body: row.body,
+                        categories,
                       },
-                    ),
+                    }),
                   ),
                 );
 
@@ -243,7 +295,14 @@ export default function ContentPage() {
                       categoryId: result.value.categoryId,
                     };
                   })
-                  .filter((item): item is { articleId: string; categoryId: string | null } => Boolean(item));
+                  .filter(
+                    (
+                      item,
+                    ): item is {
+                      articleId: string;
+                      categoryId: string | null;
+                    } => Boolean(item),
+                  );
 
                 if (!assignments.length) {
                   toast.error("AI categorization failed for selected articles");
@@ -251,13 +310,19 @@ export default function ContentPage() {
                 }
 
                 await bulkMutation.mutateAsync(assignments);
-                setSelected((prev) => prev.filter((id) => !rows.some((row) => row.id === id)));
+                setSelected((prev) =>
+                  prev.filter((id) => !rows.some((row) => row.id === id)),
+                );
 
                 const failedCount = results.length - assignments.length;
                 if (failedCount > 0) {
-                  toast.success(`Updated ${assignments.length} articles. ${failedCount} failed.`);
+                  toast.success(
+                    `Updated ${assignments.length} articles. ${failedCount} failed.`,
+                  );
                 } else {
-                  toast.success(`Updated ${assignments.length} article categories`);
+                  toast.success(
+                    `Updated ${assignments.length} article categories`,
+                  );
                 }
               } catch {
                 toast.error("Bulk AI categorization failed");
@@ -285,12 +350,14 @@ export default function ContentPage() {
       ) : null}
 
       {deleteTargetIds.length > 0 ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-          <div className="glass-card w-full max-w-md rounded-3xl p-4">
-            <h3 className="font-display text-lg font-semibold">Confirm deletion</h3>
+        <div className="modal-overlay fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
+          <div className="modal-panel glass-card w-full max-w-md rounded-3xl p-4">
+            <h3 className="font-display text-lg font-semibold">
+              Confirm deletion
+            </h3>
             <p className="mt-2 text-sm text-(--ink-soft)">
-              Delete {deleteTargetIds.length} article{deleteTargetIds.length > 1 ? "s" : ""}?
-              This cannot be undone.
+              Delete {deleteTargetIds.length} article
+              {deleteTargetIds.length > 1 ? "s" : ""}? This cannot be undone.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -305,8 +372,14 @@ export default function ContentPage() {
                 onClick={async () => {
                   try {
                     setIsDeletePending(true);
-                    await Promise.all(deleteTargetIds.map((id) => deleteMutation.mutateAsync(id)));
-                    setSelected((prev) => prev.filter((id) => !deleteTargetIds.includes(id)));
+                    await Promise.all(
+                      deleteTargetIds.map((id) =>
+                        deleteMutation.mutateAsync(id),
+                      ),
+                    );
+                    setSelected((prev) =>
+                      prev.filter((id) => !deleteTargetIds.includes(id)),
+                    );
                     setDeleteTargetIds([]);
                     toast.success("Article deletion completed");
                   } finally {

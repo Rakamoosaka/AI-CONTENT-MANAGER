@@ -4,7 +4,11 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAiAction } from "@/features/ai/hooks";
-import { useArticle, useCategories, useUpsertArticle } from "@/features/content/list/hooks";
+import {
+  useArticle,
+  useCategories,
+  useUpsertArticle,
+} from "@/features/content/list/hooks";
 import type { Article } from "@/features/content/list/types";
 import { apiMutation } from "@/lib/api/client";
 import { SelectField } from "@/components/ui/SelectField";
@@ -20,8 +24,10 @@ const TONE_OPTIONS: Array<{ value: ToneOption; label: string }> = [
 ];
 
 const TONE_HINTS: Record<ToneOption, string> = {
-  formal: "Professional and structured. Good for reports and executive readers.",
-  informal: "Conversational and friendly. Good for social and community audiences.",
+  formal:
+    "Professional and structured. Good for reports and executive readers.",
+  informal:
+    "Conversational and friendly. Good for social and community audiences.",
   neutral: "Balanced and clear. Good default for general blog content.",
 };
 
@@ -43,7 +49,7 @@ function FieldLabel({ text, tip }: { text: string; tip: string }) {
         >
           ?
         </button>
-        <span className="pointer-events-none absolute left-6 top-1/2 z-20 w-64 -translate-y-1/2 rounded-lg border border-(--line) bg-(--bg-surface) p-2 text-xs font-normal text-(--ink) opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <span className="pointer-events-none absolute left-6 top-1/2 z-20 hidden w-64 max-w-[calc(100vw-2rem)] -translate-y-1/2 rounded-lg border border-(--line) bg-(--bg-surface) p-2 text-xs font-normal text-(--ink) shadow-lg group-hover:block group-focus-within:block">
           {tip}
         </span>
       </span>
@@ -154,10 +160,17 @@ export function EditorScreen({ articleId }: Props) {
     seoDescription: string;
     seoKeywords: string[];
   }>();
-  const translateMutation = useAiAction<{ title: string; body: string; locale: string }>();
+  const translateMutation = useAiAction<{
+    title: string;
+    body: string;
+    locale: string;
+  }>();
 
   const [draftForm, setDraftForm] = useState<FormState | null>(null);
-  const form = useMemo(() => draftForm ?? mapArticleToForm(article), [draftForm, article]);
+  const form = useMemo(
+    () => draftForm ?? mapArticleToForm(article),
+    [draftForm, article],
+  );
 
   function updateForm(updater: (prev: FormState) => FormState) {
     setDraftForm((prev) => updater(prev ?? mapArticleToForm(article)));
@@ -167,9 +180,13 @@ export function EditorScreen({ articleId }: Props) {
   const [tone, setTone] = useState<ToneOption>("neutral");
   const [targetLengthInput, setTargetLengthInput] = useState("900");
   const [targetLocale, setTargetLocale] = useState("en");
-  const [categorySuggestion, setCategorySuggestion] = useState<CategorySuggestionState | null>(null);
-  const [translationPreview, setTranslationPreview] = useState<TranslationPreviewState | null>(null);
-  const [seoSuggestion, setSeoSuggestion] = useState<SeoSuggestionState | null>(null);
+  const [categorySuggestion, setCategorySuggestion] =
+    useState<CategorySuggestionState | null>(null);
+  const [translationPreview, setTranslationPreview] =
+    useState<TranslationPreviewState | null>(null);
+  const [seoSuggestion, setSeoSuggestion] = useState<SeoSuggestionState | null>(
+    null,
+  );
 
   const targetLength = useMemo(() => {
     const parsed = Number(targetLengthInput);
@@ -182,12 +199,16 @@ export function EditorScreen({ articleId }: Props) {
   }, [targetLengthInput]);
 
   const suggestedCategory =
-    categories?.find((item) => item.id === categorySuggestion?.categoryId) ?? null;
+    categories?.find((item) => item.id === categorySuggestion?.categoryId) ??
+    null;
 
   const articleCategoryOptions = useMemo(
     () => [
       { value: "", label: "No category" },
-      ...(categories?.map((category) => ({ value: category.id, label: category.name })) ?? []),
+      ...(categories?.map((category) => ({
+        value: category.id,
+        label: category.name,
+      })) ?? []),
     ],
     [categories],
   );
@@ -199,7 +220,10 @@ export function EditorScreen({ articleId }: Props) {
     }));
 
     if (form.locale && !base.some((option) => option.value === form.locale)) {
-      return [{ value: form.locale, label: form.locale.toUpperCase() }, ...base];
+      return [
+        { value: form.locale, label: form.locale.toUpperCase() },
+        ...base,
+      ];
     }
 
     return base;
@@ -214,9 +238,16 @@ export function EditorScreen({ articleId }: Props) {
 
   return (
     <div className="grid items-start gap-5 xl:grid-cols-[3fr_2fr]">
-      <section className="glass-card editor-grid-pattern stagger-in rounded-3xl p-5" style={{ animationDelay: "140ms" }}>
-        <h2 className="font-display text-3xl font-semibold tracking-tight">Article editor</h2>
-        <p className="mt-1 text-sm text-(--ink-soft)">Compose, enrich, and ship with AI support in one workspace.</p>
+      <section
+        className="glass-card editor-grid-pattern stagger-in rounded-3xl p-5"
+        style={{ animationDelay: "140ms" }}
+      >
+        <h2 className="font-display text-3xl font-semibold tracking-tight">
+          Article editor
+        </h2>
+        <p className="mt-1 text-sm text-(--ink-soft)">
+          Compose, enrich, and ship with AI support in one workspace.
+        </p>
 
         {activeAiTask ? (
           <div className="mt-4 rounded-xl border border-(--line) bg-(--bg-soft) px-3 py-2 text-sm text-(--ink)">
@@ -232,7 +263,9 @@ export function EditorScreen({ articleId }: Props) {
             className="form-control font-display text-xl"
             placeholder="Title"
             value={form.title}
-            onChange={(event) => updateForm((prev) => ({ ...prev, title: event.target.value }))}
+            onChange={(event) =>
+              updateForm((prev) => ({ ...prev, title: event.target.value }))
+            }
           />
 
           <div className="relative">
@@ -240,14 +273,18 @@ export function EditorScreen({ articleId }: Props) {
               className="form-control min-h-80 leading-relaxed"
               placeholder="Body"
               value={form.body}
-              onChange={(event) => updateForm((prev) => ({ ...prev, body: event.target.value }))}
+              onChange={(event) =>
+                updateForm((prev) => ({ ...prev, body: event.target.value }))
+              }
             />
           </div>
 
           <div className="grid gap-3 md:grid-cols-3">
             <SelectField
               value={form.categoryId}
-              onChange={(nextValue) => updateForm((prev) => ({ ...prev, categoryId: nextValue }))}
+              onChange={(nextValue) =>
+                updateForm((prev) => ({ ...prev, categoryId: nextValue }))
+              }
               options={articleCategoryOptions}
             />
 
@@ -267,7 +304,9 @@ export function EditorScreen({ articleId }: Props) {
 
             <SelectField
               value={form.locale}
-              onChange={(nextValue) => updateForm((prev) => ({ ...prev, locale: nextValue }))}
+              onChange={(nextValue) =>
+                updateForm((prev) => ({ ...prev, locale: nextValue }))
+              }
               options={localeOptions}
             />
           </div>
@@ -280,7 +319,10 @@ export function EditorScreen({ articleId }: Props) {
                 placeholder="SEO title"
                 value={form.seoTitle}
                 onChange={(event) =>
-                  updateForm((prev) => ({ ...prev, seoTitle: event.target.value }))
+                  updateForm((prev) => ({
+                    ...prev,
+                    seoTitle: event.target.value,
+                  }))
                 }
               />
               <textarea
@@ -288,7 +330,10 @@ export function EditorScreen({ articleId }: Props) {
                 placeholder="SEO description"
                 value={form.seoDescription}
                 onChange={(event) =>
-                  updateForm((prev) => ({ ...prev, seoDescription: event.target.value }))
+                  updateForm((prev) => ({
+                    ...prev,
+                    seoDescription: event.target.value,
+                  }))
                 }
               />
               <input
@@ -296,7 +341,10 @@ export function EditorScreen({ articleId }: Props) {
                 placeholder="keyword1, keyword2"
                 value={form.seoKeywords}
                 onChange={(event) =>
-                  updateForm((prev) => ({ ...prev, seoKeywords: event.target.value }))
+                  updateForm((prev) => ({
+                    ...prev,
+                    seoKeywords: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -325,7 +373,9 @@ export function EditorScreen({ articleId }: Props) {
                   router.push(`/content/${saved.id}`);
                 }
               } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Save failed");
+                toast.error(
+                  error instanceof Error ? error.message : "Save failed",
+                );
               }
             }}
           >
@@ -334,9 +384,14 @@ export function EditorScreen({ articleId }: Props) {
         </div>
       </section>
 
-      <aside className="glass-card accent-panel stagger-in sticky top-4 h-fit rounded-3xl p-5" style={{ animationDelay: "260ms" }}>
+      <aside
+        className="glass-card accent-panel stagger-in sticky top-4 h-fit rounded-3xl p-5"
+        style={{ animationDelay: "260ms" }}
+      >
         <h3 className="font-display text-2xl font-semibold">AI panel</h3>
-        <p className="mt-1 text-sm text-(--ink-soft)">Generate, optimize, and localize without leaving this screen.</p>
+        <p className="mt-1 text-sm text-(--ink-soft)">
+          Generate, optimize, and localize without leaving this screen.
+        </p>
 
         <div className="ai-timeline mt-4 space-y-4">
           <section
@@ -388,11 +443,14 @@ export function EditorScreen({ articleId }: Props) {
                     return;
                   }
 
-                  setTargetLengthInput(String(Math.min(1500, Math.max(120, Math.round(parsed)))));
+                  setTargetLengthInput(
+                    String(Math.min(1500, Math.max(120, Math.round(parsed)))),
+                  );
                 }}
               />
               <p className="text-xs text-(--ink-soft)">
-                Controls article depth. Example: 450 = quick brief, 900 = full post, 1400 = deep dive.
+                Controls article depth. Example: 450 = quick brief, 900 = full
+                post, 1400 = deep dive.
               </p>
               <div className="flex flex-wrap gap-2">
                 {LENGTH_PRESETS.map((preset) => (
@@ -417,7 +475,9 @@ export function EditorScreen({ articleId }: Props) {
                       input: { topic, tone, targetLength },
                     });
 
-                    const detectedLocale = detectLocaleFromText(`${data.title}\n${data.body}`);
+                    const detectedLocale = detectLocaleFromText(
+                      `${data.title}\n${data.body}`,
+                    );
 
                     updateForm((prev) => ({
                       ...prev,
@@ -446,7 +506,9 @@ export function EditorScreen({ articleId }: Props) {
             className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
             style={{ animationDelay: "390ms" }}
           >
-            <h4 className="font-display text-lg font-semibold">Category suggestion</h4>
+            <h4 className="font-display text-lg font-semibold">
+              Category suggestion
+            </h4>
             <button
               title="Analyze text and suggest the best matching category"
               className="mt-2 rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
@@ -484,12 +546,16 @@ export function EditorScreen({ articleId }: Props) {
               <div className="mt-3 rounded-lg border border-(--line) bg-(--bg-soft) p-3 text-sm">
                 <p>
                   Suggested category:{" "}
-                  <strong>{suggestedCategory?.name ?? "No matching category"}</strong>
+                  <strong>
+                    {suggestedCategory?.name ?? "No matching category"}
+                  </strong>
                 </p>
                 <p className="mt-1 text-xs text-(--ink-soft)">
                   Confidence: {Math.round(categorySuggestion.confidence * 100)}%
                 </p>
-                <p className="mt-1 text-xs text-(--ink-soft)">{categorySuggestion.rationale}</p>
+                <p className="mt-1 text-xs text-(--ink-soft)">
+                  {categorySuggestion.rationale}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base) disabled:cursor-not-allowed disabled:opacity-50"
@@ -499,7 +565,10 @@ export function EditorScreen({ articleId }: Props) {
                         return;
                       }
 
-                      updateForm((prev) => ({ ...prev, categoryId: suggestedCategory.id }));
+                      updateForm((prev) => ({
+                        ...prev,
+                        categoryId: suggestedCategory.id,
+                      }));
                       setCategorySuggestion(null);
                       toast.success("Suggested category applied");
                     }}
@@ -533,10 +602,16 @@ export function EditorScreen({ articleId }: Props) {
                 try {
                   const data = await seoMutation.mutateAsync({
                     action: "seoSuggestions",
-                    input: { title: form.title, body: form.body, locale: form.locale },
+                    input: {
+                      title: form.title,
+                      body: form.body,
+                      locale: form.locale,
+                    },
                   });
                   setSeoSuggestion(data);
-                  toast.success("SEO suggestion ready. Review and apply if you want.");
+                  toast.success(
+                    "SEO suggestion ready. Review and apply if you want.",
+                  );
                 } catch {
                   toast.error("SEO suggestions failed");
                 }
@@ -555,7 +630,9 @@ export function EditorScreen({ articleId }: Props) {
             {seoSuggestion ? (
               <div className="mt-3 rounded-lg border border-(--line) bg-(--bg-soft) p-3 text-sm">
                 <p className="font-medium">Proposed SEO metadata</p>
-                <p className="mt-2 text-xs text-(--ink-soft)">Title: {seoSuggestion.seoTitle}</p>
+                <p className="mt-2 text-xs text-(--ink-soft)">
+                  Title: {seoSuggestion.seoTitle}
+                </p>
                 <p className="mt-1 text-xs text-(--ink-soft)">
                   Description: {seoSuggestion.seoDescription}
                 </p>
@@ -612,7 +689,9 @@ export function EditorScreen({ articleId }: Props) {
                 disabled={translateMutation.isPending}
                 onClick={async () => {
                   if (!form.title.trim() || !form.body.trim()) {
-                    toast.error("Title and body are required before translation");
+                    toast.error(
+                      "Title and body are required before translation",
+                    );
                     return;
                   }
 
@@ -629,7 +708,11 @@ export function EditorScreen({ articleId }: Props) {
                     setTranslationPreview(data);
                     toast.success("Translation ready. Choose how to apply it.");
                   } catch (error) {
-                    toast.error(error instanceof Error ? error.message : "Translation failed");
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Translation failed",
+                    );
                   }
                 }}
               >
@@ -645,7 +728,9 @@ export function EditorScreen({ articleId }: Props) {
 
               {translationPreview ? (
                 <div className="rounded-lg border border-(--line) bg-(--bg-soft) p-3">
-                  <p className="text-sm font-medium">Translation ready ({translationPreview.locale})</p>
+                  <p className="text-sm font-medium">
+                    Translation ready ({translationPreview.locale})
+                  </p>
                   <p className="mt-1 line-clamp-2 text-xs text-(--ink-soft)">
                     {translationPreview.title}
                   </p>
@@ -654,19 +739,23 @@ export function EditorScreen({ articleId }: Props) {
                       className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base)"
                       onClick={async () => {
                         try {
-                          const created = await apiMutation<Article>("/api/articles", "POST", {
-                            title: translationPreview.title,
-                            body: translationPreview.body,
-                            status: form.status,
-                            locale: translationPreview.locale,
-                            categoryId: form.categoryId || null,
-                            seoTitle: form.seoTitle || null,
-                            seoDescription: form.seoDescription || null,
-                            seoKeywords: form.seoKeywords
-                              .split(",")
-                              .map((item) => item.trim())
-                              .filter(Boolean),
-                          });
+                          const created = await apiMutation<Article>(
+                            "/api/articles",
+                            "POST",
+                            {
+                              title: translationPreview.title,
+                              body: translationPreview.body,
+                              status: form.status,
+                              locale: translationPreview.locale,
+                              categoryId: form.categoryId || null,
+                              seoTitle: form.seoTitle || null,
+                              seoDescription: form.seoDescription || null,
+                              seoKeywords: form.seoKeywords
+                                .split(",")
+                                .map((item) => item.trim())
+                                .filter(Boolean),
+                            },
+                          );
 
                           setTranslationPreview(null);
                           toast.success("Translated article created");
@@ -692,7 +781,9 @@ export function EditorScreen({ articleId }: Props) {
                           locale: translationPreview.locale,
                         }));
                         setTranslationPreview(null);
-                        toast.success("Current article replaced with translation");
+                        toast.success(
+                          "Current article replaced with translation",
+                        );
                       }}
                     >
                       Replace current
