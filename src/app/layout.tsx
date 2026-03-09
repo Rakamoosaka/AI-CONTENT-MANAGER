@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Source_Serif_4 } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
+import { I18nProvider } from "@/components/providers/I18nProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ToasterProvider } from "@/components/providers/ToasterProvider";
 import "./globals.css";
@@ -29,8 +30,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${heading.variable} ${body.variable}`}>
         <QueryProvider>
-          <AppShell>{children}</AppShell>
-          <ToasterProvider />
+          <I18nProvider>
+            <AppShell>{children}</AppShell>
+            <ToasterProvider />
+          </I18nProvider>
         </QueryProvider>
       </body>
     </html>

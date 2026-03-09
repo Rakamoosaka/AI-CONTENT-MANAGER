@@ -12,23 +12,30 @@ import {
   PlusCircle,
   X,
 } from "lucide-react";
+import { SelectField } from "@/components/ui/SelectField";
+import { useI18n } from "@/components/providers/I18nProvider";
+import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const nav: Array<{
   href: Route;
-  label: string;
+  labelKey:
+    | "shell.nav.dashboard"
+    | "shell.nav.content"
+    | "shell.nav.categories";
   icon: React.ComponentType<{ size?: number }>;
 }> = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/content", label: "Content", icon: FileText },
-  { href: "/categories", label: "Categories", icon: FolderTree },
+  { href: "/", labelKey: "shell.nav.dashboard", icon: LayoutDashboard },
+  { href: "/content", labelKey: "shell.nav.content", icon: FileText },
+  { href: "/categories", labelKey: "shell.nav.categories", icon: FolderTree },
 ];
 
 type Props = { children: React.ReactNode };
 
 function ShellNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <nav className="mt-6 space-y-2">
@@ -50,7 +57,7 @@ function ShellNav({ onNavigate }: { onNavigate?: () => void }) {
             )}
           >
             <Icon size={16} />
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}
@@ -65,6 +72,7 @@ function ShellPath() {
 
 export function AppShell({ children }: Props) {
   const pathname = usePathname();
+  const { t, locale, setLocale, localeOptions } = useI18n();
   const [mobileNavOpenedOnPath, setMobileNavOpenedOnPath] = useState<
     string | null
   >(null);
@@ -78,11 +86,19 @@ export function AppShell({ children }: Props) {
           style={{ animationDelay: "20ms" }}
         >
           <h1 className="font-display text-3xl font-semibold leading-tight">
-            AI Content Manager
+            {t("app.title")}
           </h1>
           <p className="mt-1 text-sm tracking-wide text-(--ink-soft)">
-            Editorial cockpit
+            {t("app.subtitle")}
           </p>
+          <div className="mt-4">
+            <SelectField
+              value={locale}
+              onChange={(value) => setLocale(value as Locale)}
+              options={localeOptions}
+              placeholder={t("language.label")}
+            />
+          </div>
           <Suspense fallback={<nav className="mt-6 space-y-2" />}>
             <ShellNav />
           </Suspense>
@@ -91,7 +107,7 @@ export function AppShell({ children }: Props) {
             className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-transparent bg-(--amber) px-3 py-2 text-sm font-semibold text-(--teal) hover:border-(--teal)"
           >
             <PlusCircle size={16} />
-            Create Article
+            {t("shell.createArticle")}
           </Link>
         </aside>
 
@@ -109,7 +125,7 @@ export function AppShell({ children }: Props) {
               <button
                 type="button"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--line) bg-(--bg-surface) md:hidden"
-                aria-label="Open menu"
+                aria-label={t("shell.openMenu")}
                 aria-expanded={isMobileNavOpen}
                 onClick={() => setMobileNavOpenedOnPath(pathname)}
               >
@@ -121,7 +137,7 @@ export function AppShell({ children }: Props) {
             <Suspense
               fallback={
                 <div className="card p-4 text-sm text-(--ink-soft)">
-                  Loading...
+                  {t("common.loading")}
                 </div>
               }
             >
@@ -150,7 +166,7 @@ export function AppShell({ children }: Props) {
             "absolute inset-0 bg-black/35 transition-opacity duration-250",
             isMobileNavOpen ? "opacity-100" : "opacity-0",
           )}
-          aria-label="Close menu overlay"
+          aria-label={t("shell.closeMenuOverlay")}
           onClick={() => setMobileNavOpenedOnPath(null)}
         />
         <aside
@@ -164,20 +180,29 @@ export function AppShell({ children }: Props) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-2xl font-semibold leading-tight">
-                AI Content Manager
+                {t("app.title")}
               </h2>
               <p className="mt-1 text-sm tracking-wide text-(--ink-soft)">
-                Editorial cockpit
+                {t("app.subtitle")}
               </p>
             </div>
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-(--line) bg-(--bg-surface)"
-              aria-label="Close menu"
+              aria-label={t("shell.closeMenu")}
               onClick={() => setMobileNavOpenedOnPath(null)}
             >
               <X size={16} />
             </button>
+          </div>
+
+          <div className="mt-4">
+            <SelectField
+              value={locale}
+              onChange={(value) => setLocale(value as Locale)}
+              options={localeOptions}
+              placeholder={t("language.label")}
+            />
           </div>
 
           <Suspense fallback={<nav className="mt-6 space-y-2" />}>
@@ -190,7 +215,7 @@ export function AppShell({ children }: Props) {
             className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-transparent bg-(--amber) px-3 py-2 text-sm font-semibold text-(--teal) hover:border-(--teal)"
           >
             <PlusCircle size={16} />
-            Create Article
+            {t("shell.createArticle")}
           </Link>
         </aside>
       </div>

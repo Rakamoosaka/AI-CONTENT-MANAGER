@@ -22,11 +22,6 @@ export function mapArticleToForm(article?: Article): FormState {
 export function detectLocaleFromText(text: string): string {
   const sample = text.slice(0, 2500);
 
-  const zhMatches = sample.match(/[\u4e00-\u9fff]/g)?.length ?? 0;
-  if (zhMatches >= 8) {
-    return "zh";
-  }
-
   const kazakhSpecificMatches = sample.match(/[әғқңөұүһі]/gi)?.length ?? 0;
   if (kazakhSpecificMatches >= 3) {
     return "kk";

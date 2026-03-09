@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { useI18n } from "@/components/providers/I18nProvider";
 import { useDashboardStats } from "@/features/content/list/hooks";
 import { formatDate } from "@/lib/utils";
 
 export default function Home() {
+  const { t } = useI18n();
   const { data, isLoading } = useDashboardStats();
 
   const chartPalette = [
@@ -16,9 +18,9 @@ export default function Home() {
   ];
 
   const summary = [
-    { label: "Total Articles", value: data?.totalArticles ?? 0 },
-    { label: "Published", value: data?.published ?? 0 },
-    { label: "Drafts", value: data?.drafts ?? 0 },
+    { label: t("dashboard.totalArticles"), value: data?.totalArticles ?? 0 },
+    { label: t("status.published"), value: data?.published ?? 0 },
+    { label: t("status.draft"), value: data?.drafts ?? 0 },
   ];
 
   const chartRows = useMemo(() => {
@@ -36,27 +38,26 @@ export default function Home() {
         <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-(--ink-soft)">
-              Dashboard
+              {t("dashboard.tag")}
             </p>
             <h1 className="font-display mt-2 max-w-xl text-3xl font-semibold leading-tight md:text-4xl">
-              Content operations overview with live editorial momentum.
+              {t("dashboard.headline")}
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-(--ink-soft)">
-              Track delivery health, publication balance, and category
-              performance in one ambient control surface.
+              {t("dashboard.description")}
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href="/content/new"
                 className="rounded-xl bg-(--teal) px-4 py-2 text-sm font-semibold text-white"
               >
-                Create Article
+                {t("shell.createArticle")}
               </Link>
               <Link
                 href="/content"
                 className="rounded-xl border border-(--line) bg-white/80 px-4 py-2 text-sm font-semibold"
               >
-                Open Content Queue
+                {t("dashboard.openQueue")}
               </Link>
             </div>
           </div>
@@ -80,10 +81,10 @@ export default function Home() {
         <section className="glass-card rounded-3xl p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xl font-semibold">
-              Category Pulse
+              {t("dashboard.categoryPulse")}
             </h2>
             <p className="text-xs uppercase tracking-[0.14em] text-(--ink-soft)">
-              Live mix
+              {t("dashboard.liveMix")}
             </p>
           </div>
 
@@ -115,7 +116,7 @@ export default function Home() {
 
         <section className="glass-card rounded-3xl p-5">
           <h2 className="font-display text-xl font-semibold">
-            Category distribution
+            {t("dashboard.categoryDistribution")}
           </h2>
           <ul className="mt-4 space-y-2">
             {data?.categoriesDistribution.map((item) => (
@@ -136,20 +137,26 @@ export default function Home() {
       <section className="glass-card rounded-3xl p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-semibold">
-            Latest articles
+            {t("dashboard.latestArticles")}
           </h2>
           <p className="text-xs uppercase tracking-[0.14em] text-(--ink-soft)">
-            Recent activity
+            {t("dashboard.recentActivity")}
           </p>
         </div>
         <div className="mt-3 overflow-x-auto rounded-2xl border border-(--line) bg-white/80 p-2">
           <table className="min-w-176 text-sm md:min-w-full md:table-fixed [&_th]:px-3 [&_td]:px-3">
             <thead>
               <tr className="text-left text-(--ink-soft)">
-                <th className="py-2 md:w-[46%]">Title</th>
-                <th className="whitespace-nowrap md:w-[18%]">Status</th>
-                <th className="whitespace-nowrap md:w-[14%]">Locale</th>
-                <th className="whitespace-nowrap md:w-[22%]">Created</th>
+                <th className="py-2 md:w-[46%]">{t("dashboard.col.title")}</th>
+                <th className="whitespace-nowrap md:w-[18%]">
+                  {t("dashboard.col.status")}
+                </th>
+                <th className="whitespace-nowrap md:w-[14%]">
+                  {t("dashboard.col.locale")}
+                </th>
+                <th className="whitespace-nowrap md:w-[22%]">
+                  {t("dashboard.col.created")}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -164,7 +171,9 @@ export default function Home() {
                     </Link>
                   </td>
                   <td className="whitespace-nowrap align-middle">
-                    {item.status}
+                    {item.status === "published"
+                      ? t("status.published")
+                      : t("status.draft")}
                   </td>
                   <td className="whitespace-nowrap align-middle">
                     {item.locale}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useI18n } from "@/components/providers/I18nProvider";
 import {
   useArticles,
   useBulkCategorize,
@@ -15,6 +16,7 @@ import { ContentTable } from "@/features/content/list/components/ContentTable";
 import { DeleteConfirmModal } from "@/features/content/list/components/DeleteConfirmModal";
 
 export default function ContentPage() {
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -37,22 +39,22 @@ export default function ContentPage() {
 
   const statusOptions = useMemo(
     () => [
-      { value: "", label: "All statuses" },
-      { value: "draft", label: "Draft" },
-      { value: "published", label: "Published" },
+      { value: "", label: t("content.allStatuses") },
+      { value: "draft", label: t("status.draft") },
+      { value: "published", label: t("status.published") },
     ],
-    [],
+    [t],
   );
 
   const categoryOptions = useMemo(
     () => [
-      { value: "", label: "All categories" },
+      { value: "", label: t("content.allCategories") },
       ...(categories?.map((category) => ({
         value: category.id,
         label: category.name,
       })) ?? []),
     ],
-    [categories],
+    [categories, t],
   );
 
   const totalItems = data?.meta.total ?? 0;
@@ -67,13 +69,13 @@ export default function ContentPage() {
 
   async function handleBulkAiCategorization() {
     if (!categories?.length) {
-      toast.error("No categories available");
+      toast.error(t("content.noCategories"));
       return;
     }
 
     const selectedRows = rows.filter((item) => selected.includes(item.id));
     if (!selectedRows.length) {
-      toast.error("No selected rows on this page");
+      toast.error(t("content.noSelectedRows"));
       return;
     }
 
@@ -117,7 +119,7 @@ export default function ContentPage() {
         );
 
       if (!assignments.length) {
-        toast.error("AI categorization failed for selected articles");
+        toast.error(t("content.aiCategorizeFailedSelected"));
         return;
       }
 
@@ -129,13 +131,18 @@ export default function ContentPage() {
       const failedCount = results.length - assignments.length;
       if (failedCount > 0) {
         toast.success(
-          `Updated ${assignments.length} articles. ${failedCount} failed.`,
+          t("content.updatedWithFailures", {
+            updated: assignments.length,
+            failed: failedCount,
+          }),
         );
       } else {
-        toast.success(`Updated ${assignments.length} article categories`);
+        toast.success(
+          t("content.updatedCategories", { count: assignments.length }),
+        );
       }
     } catch {
-      toast.error("Bulk AI categorization failed");
+      toast.error(t("content.bulkAiFailed"));
     } finally {
       setIsBulkAiCategorizing(false);
     }
@@ -149,7 +156,7 @@ export default function ContentPage() {
       );
       setSelected((prev) => prev.filter((id) => !deleteTargetIds.includes(id)));
       setDeleteTargetIds([]);
-      toast.success("Article deletion completed");
+      toast.success(t("content.deleteCompleted"));
     } finally {
       setIsDeletePending(false);
     }
@@ -189,10 +196,14 @@ export default function ContentPage() {
 
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-(--ink-soft)">
-            <p>Total: {totalItems}</p>
+            <p>{t("content.total", { count: totalItems })}</p>
             <p>
-              Page {currentPage} of {totalPages} | Showing {rangeStart}-
-              {rangeEnd}
+              {t("content.pageInfo", {
+                page: currentPage,
+                totalPages,
+                start: rangeStart,
+                end: rangeEnd,
+              })}
             </p>
           </div>
           <div className="flex gap-2">
@@ -201,14 +212,14 @@ export default function ContentPage() {
               disabled={page <= 1}
               onClick={() => setPage((prev) => prev - 1)}
             >
-              Prev
+              {t("common.prev")}
             </button>
             <button
               className="rounded-lg border border-(--line) px-3 py-1"
               disabled={currentPage >= totalPages}
               onClick={() => setPage((prev) => prev + 1)}
             >
-              Next
+              {t("common.next")}
             </button>
           </div>
         </div>

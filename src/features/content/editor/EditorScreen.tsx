@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useI18n } from "@/components/providers/I18nProvider";
 import { useAiAction } from "@/features/ai/hooks";
 import {
   useArticle,
@@ -30,6 +31,7 @@ import {
 type Props = { articleId?: string };
 
 export function EditorScreen({ articleId }: Props) {
+  const { t } = useI18n();
   const router = useRouter();
   const { data: categories } = useCategories();
   const { data: article } = useArticle(articleId);
@@ -89,19 +91,19 @@ export function EditorScreen({ articleId }: Props) {
 
   const articleCategoryOptions = useMemo(
     () => [
-      { value: "", label: "No category" },
+      { value: "", label: t("editor.noCategory") },
       ...(categories?.map((category) => ({
         value: category.id,
         label: category.name,
       })) ?? []),
     ],
-    [categories],
+    [categories, t],
   );
 
   const localeOptions = useMemo(() => {
     const base = TARGET_LANGUAGE_OPTIONS.map((option) => ({
       value: option.value,
-      label: option.label,
+      label: t(option.label),
     }));
 
     if (form.locale && !base.some((option) => option.value === form.locale)) {
@@ -112,25 +114,27 @@ export function EditorScreen({ articleId }: Props) {
     }
 
     return base;
-  }, [form.locale]);
+  }, [form.locale, t]);
 
   const activeAiTask =
-    (generateMutation.isPending && "Generating article draft") ||
-    (categorizeMutation.isPending && "Analyzing category match") ||
-    (seoMutation.isPending && "Preparing SEO suggestions") ||
-    (translateMutation.isPending && "Translating article") ||
+    (generateMutation.isPending && t("aiTask.generating")) ||
+    (categorizeMutation.isPending && t("aiTask.categorizing")) ||
+    (seoMutation.isPending && t("aiTask.seo")) ||
+    (translateMutation.isPending && t("aiTask.translating")) ||
     null;
 
   async function handleSaveArticle() {
     try {
       const saved = await saveMutation.mutateAsync(toArticlePayload(form));
       setDraftForm(null);
-      toast.success("Article saved");
+      toast.success(t("editor.saved"));
       if (!articleId) {
         router.push(`/content/${saved.id}`);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Save failed");
+      toast.error(
+        error instanceof Error ? error.message : t("editor.saveFailed"),
+      );
     }
   }
 
@@ -152,7 +156,7 @@ export function EditorScreen({ articleId }: Props) {
         locale: detectedLocale,
       }));
     } catch {
-      toast.error("Generation failed");
+      toast.error(t("editor.generationFailed"));
     }
   }
 
@@ -169,10 +173,10 @@ export function EditorScreen({ articleId }: Props) {
       setCategorySuggestion(data);
 
       if (!data.categoryId) {
-        toast.info("No confident category match found");
+        toast.info(t("editor.noCategoryMatch"));
       }
     } catch {
-      toast.error("Category suggestion failed");
+      toast.error(t("editor.categorySuggestionFailed"));
     }
   }
 
@@ -187,9 +191,9 @@ export function EditorScreen({ articleId }: Props) {
         },
       });
       setSeoSuggestion(data);
-      toast.success("SEO suggestion ready. Review and apply if you want.");
+      toast.success(t("editor.seoReady"));
     } catch {
-      toast.error("SEO suggestions failed");
+      toast.error(t("editor.seoFailed"));
     }
   }
 
@@ -205,10 +209,10 @@ export function EditorScreen({ articleId }: Props) {
       });
 
       setTranslationPreview(data);
-      toast.success("Translation ready. Choose how to apply it.");
+      toast.success(t("editor.translationReady"));
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Translation failed",
+        error instanceof Error ? error.message : t("editor.translationFailed"),
       );
     }
   }
@@ -227,13 +231,13 @@ export function EditorScreen({ articleId }: Props) {
       });
 
       setTranslationPreview(null);
-      toast.success("Translated article created");
+      toast.success(t("editor.translatedCreated"));
       router.push(`/content/${created.id}`);
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to create translated article",
+          : t("editor.createTranslatedFailed"),
       );
     }
   }
@@ -292,11 +296,11 @@ export function EditorScreen({ articleId }: Props) {
             categoryId: suggestedCategory.id,
           }));
           setCategorySuggestion(null);
-          toast.success("Suggested category applied");
+          toast.success(t("editor.suggestedCategoryApplied"));
         }}
         onDismissCategorySuggestion={() => {
           setCategorySuggestion(null);
-          toast.info("Category suggestion dismissed");
+          toast.info(t("editor.categorySuggestionDismissed"));
         }}
         onSuggestSeo={handleSuggestSeo}
         onApplySeo={() => {
@@ -311,11 +315,11 @@ export function EditorScreen({ articleId }: Props) {
             seoKeywords: seoSuggestion.seoKeywords.join(", "),
           }));
           setSeoSuggestion(null);
-          toast.success("SEO suggestion applied");
+          toast.success(t("editor.seoSuggestionApplied"));
         }}
         onDismissSeo={() => {
           setSeoSuggestion(null);
-          toast.info("SEO suggestion dismissed");
+          toast.info(t("editor.seoSuggestionDismissed"));
         }}
         onTranslate={handleTranslate}
         onCreateTranslatedArticle={handleCreateTranslatedArticle}
@@ -331,7 +335,7 @@ export function EditorScreen({ articleId }: Props) {
             locale: translationPreview.locale,
           }));
           setTranslationPreview(null);
-          toast.success("Current article replaced with translation");
+          toast.success(t("editor.currentReplaced"));
         }}
         onCancelTranslation={() => setTranslationPreview(null)}
       />

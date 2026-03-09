@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useI18n } from "@/components/providers/I18nProvider";
 import { formatDate } from "@/lib/utils";
 import type { Article } from "@/features/content/list/types";
 
@@ -21,6 +22,8 @@ export function ContentTable({
   onToggleRow,
   onDeleteRow,
 }: Props) {
+  const { t } = useI18n();
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-(--line) bg-(--bg-surface)/85 p-2">
       <table className="min-w-232 text-sm md:min-w-full md:table-fixed [&_th]:px-3 [&_td]:px-3">
@@ -34,11 +37,17 @@ export function ContentTable({
                 onChange={(event) => onToggleAll(event.target.checked)}
               />
             </th>
-            <th className="md:w-[40%]">Title</th>
-            <th className="md:w-[20%]">Category</th>
-            <th className="whitespace-nowrap md:w-[12%]">Status</th>
-            <th className="whitespace-nowrap md:w-[16%]">Created</th>
-            <th className="whitespace-nowrap md:w-[12%]">Locale</th>
+            <th className="md:w-[40%]">{t("dashboard.col.title")}</th>
+            <th className="md:w-[20%]">{t("content.col.category")}</th>
+            <th className="whitespace-nowrap md:w-[12%]">
+              {t("dashboard.col.status")}
+            </th>
+            <th className="whitespace-nowrap md:w-[16%]">
+              {t("dashboard.col.created")}
+            </th>
+            <th className="whitespace-nowrap md:w-[12%]">
+              {t("dashboard.col.locale")}
+            </th>
             <th className="md:w-16" />
           </tr>
         </thead>
@@ -66,7 +75,11 @@ export function ContentTable({
               <td className="pr-2 align-middle wrap-break-word">
                 {item.categoryName ?? "-"}
               </td>
-              <td className="whitespace-nowrap align-middle">{item.status}</td>
+              <td className="whitespace-nowrap align-middle">
+                {item.status === "published"
+                  ? t("status.published")
+                  : t("status.draft")}
+              </td>
               <td className="whitespace-nowrap align-middle">
                 {formatDate(item.createdAt)}
               </td>
@@ -76,7 +89,7 @@ export function ContentTable({
                   className="text-(--danger)"
                   onClick={() => onDeleteRow(item.id)}
                 >
-                  Delete
+                  {t("common.delete")}
                 </button>
               </td>
             </tr>

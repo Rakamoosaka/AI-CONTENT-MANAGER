@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useI18n } from "@/components/providers/I18nProvider";
 import { apiMutation } from "@/lib/api/client";
 import {
   useCategories,
@@ -32,6 +33,7 @@ function FieldLabel({ text, tip }: { text: string; tip: string }) {
 }
 
 export default function CategoriesPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { data: categories } = useCategories();
   const deleteMutation = useDeleteCategory();
@@ -52,7 +54,7 @@ export default function CategoriesPage() {
             setOpen(true);
           }}
         >
-          New category
+          {t("categories.newCategory")}
         </button>
       </div>
 
@@ -61,10 +63,10 @@ export default function CategoriesPage() {
           <table className="min-w-175 text-sm md:min-w-full md:table-fixed">
             <thead>
               <tr className="text-left text-(--ink-soft)">
-                <th className="py-2 md:w-1/6">Name</th>
-                <th className="md:w-1/6">Slug</th>
-                <th className="md:w-16">In use</th>
-                <th>Description</th>
+                <th className="py-2 md:w-1/6">{t("categories.col.name")}</th>
+                <th className="md:w-1/6">{t("categories.col.slug")}</th>
+                <th className="md:w-16">{t("categories.col.inUse")}</th>
+                <th>{t("categories.col.description")}</th>
                 <th className="md:w-28" />
               </tr>
             </thead>
@@ -83,7 +85,7 @@ export default function CategoriesPage() {
                           setOpen(true);
                         }}
                       >
-                        Edit
+                        {t("common.edit")}
                       </button>
                       {(item.articleCount ?? 0) > 0 ? (
                         <span className="group relative inline-flex">
@@ -92,10 +94,10 @@ export default function CategoriesPage() {
                             disabled
                             aria-disabled="true"
                           >
-                            Delete
+                            {t("common.delete")}
                           </button>
                           <span className="pointer-events-none absolute -top-9 right-0 z-20 whitespace-nowrap rounded-md border border-(--line) bg-(--bg-surface) px-2 py-1 text-xs text-(--ink) opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                            Category is in use
+                            {t("categories.inUseHint")}
                           </span>
                         </span>
                       ) : (
@@ -103,7 +105,7 @@ export default function CategoriesPage() {
                           className="text-(--danger)"
                           onClick={() => setDeletingCategory(item)}
                         >
-                          Delete
+                          {t("common.delete")}
                         </button>
                       )}
                     </div>
@@ -131,7 +133,7 @@ export default function CategoriesPage() {
             } else {
               await createMutation.mutateAsync(payload);
             }
-            toast.success("Category saved");
+            toast.success(t("categories.saved"));
             setOpen(false);
           }}
         />
@@ -141,18 +143,17 @@ export default function CategoriesPage() {
         <div className="modal-overlay fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
           <div className="modal-panel glass-card w-full max-w-md rounded-3xl p-4">
             <h3 className="font-display text-lg font-semibold">
-              Confirm deletion
+              {t("categories.confirmDeletion")}
             </h3>
             <p className="mt-2 text-sm text-(--ink-soft)">
-              Delete category <strong>{deletingCategory.name}</strong>? This
-              action cannot be undone.
+              {t("categories.deletePrompt", { name: deletingCategory.name })}
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 className="rounded-lg border border-(--line) px-3 py-2"
                 onClick={() => setDeletingCategory(null)}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 className="rounded-lg bg-(--danger) px-3 py-2 text-white"
@@ -160,18 +161,18 @@ export default function CategoriesPage() {
                 onClick={async () => {
                   try {
                     await deleteMutation.mutateAsync(deletingCategory.id);
-                    toast.success("Category deleted");
+                    toast.success(t("categories.deleted"));
                     setDeletingCategory(null);
                   } catch (error) {
                     toast.error(
                       error instanceof Error
                         ? error.message
-                        : "Category cannot be deleted while in use",
+                        : t("categories.cannotDeleteInUse"),
                     );
                   }
                 }}
               >
-                Delete
+                {t("common.delete")}
               </button>
             </div>
           </div>
@@ -190,6 +191,7 @@ function CategoryDialog({
   onClose: () => void;
   onSave: (payload: Partial<Category>) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -201,12 +203,12 @@ function CategoryDialog({
     const normalizedDescription = description.trim();
 
     if (normalizedName.length < 2) {
-      toast.error("Name must be at least 2 characters");
+      toast.error(t("categories.nameTooShort"));
       return;
     }
 
     if (normalizedSlug.length < 2) {
-      toast.error("Slug is required and must be at least 2 characters");
+      toast.error(t("categories.slugTooShort"));
       return;
     }
 
@@ -220,7 +222,7 @@ function CategoryDialog({
       });
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to save category",
+        error instanceof Error ? error.message : t("categories.saveFailed"),
       );
     } finally {
       setIsSaving(false);
@@ -231,41 +233,43 @@ function CategoryDialog({
     <div className="modal-overlay fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
       <div className="modal-panel glass-card w-full max-w-md rounded-3xl p-4">
         <h3 className="font-display text-lg font-semibold">
-          {initial ? "Edit" : "Create"} category
+          {initial
+            ? t("categories.dialog.edit")
+            : t("categories.dialog.create")}
         </h3>
         <div className="mt-3 grid gap-2">
           <div>
             <FieldLabel
-              text="Name"
-              tip="Human-readable category name shown across the UI."
+              text={t("categories.field.name")}
+              tip={t("categories.field.nameTip")}
             />
             <input
               className="form-control"
-              placeholder="Name"
+              placeholder={t("categories.field.name")}
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
           </div>
           <div>
             <FieldLabel
-              text="Slug"
-              tip="URL-safe unique id, usually lowercase with hyphens, e.g. 'product-marketing'."
+              text={t("categories.field.slug")}
+              tip={t("categories.field.slugTip")}
             />
             <input
               className="form-control"
-              placeholder="Slug"
+              placeholder={t("categories.field.slug")}
               value={slug}
               onChange={(event) => setSlug(event.target.value)}
             />
           </div>
           <div>
             <FieldLabel
-              text="Description"
-              tip="Short summary used to clarify what belongs in this category."
+              text={t("categories.field.description")}
+              tip={t("categories.field.descriptionTip")}
             />
             <textarea
               className="form-control"
-              placeholder="Description"
+              placeholder={t("categories.field.description")}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
@@ -277,14 +281,14 @@ function CategoryDialog({
             onClick={onClose}
             disabled={isSaving}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="rounded-lg bg-(--teal) px-3 py-2 text-white"
             onClick={handleSave}
             disabled={isSaving}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? t("categories.saving") : t("common.save")}
           </button>
         </div>
       </div>

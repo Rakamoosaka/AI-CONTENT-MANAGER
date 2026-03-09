@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { useI18n } from "@/components/providers/I18nProvider";
 import type { Article } from "@/features/content/list/types";
 import { SelectField } from "@/components/ui/SelectField";
 import { ARTICLE_STATUS_OPTIONS } from "./constants";
@@ -31,44 +32,51 @@ type ToolbarAction =
 const TOOLBAR_BUTTONS: Array<{
   action: ToolbarAction;
   label: string;
-  title: string;
+  labelKey?: string;
+  titleKey: string;
   shortcut?: string;
 }> = [
-  { action: "bold", label: "B", title: "Bold", shortcut: "Ctrl/Cmd+B" },
+  {
+    action: "bold",
+    label: "B",
+    titleKey: "editor.toolbar.bold",
+    shortcut: "Ctrl/Cmd+B",
+  },
   {
     action: "italic",
     label: "I",
-    title: "Italic",
+    titleKey: "editor.toolbar.italic",
     shortcut: "Ctrl/Cmd+I",
   },
-  { action: "h2", label: "H2", title: "Heading 2" },
-  { action: "h3", label: "H3", title: "Heading 3" },
+  { action: "h2", label: "H2", titleKey: "editor.toolbar.h2" },
+  { action: "h3", label: "H3", titleKey: "editor.toolbar.h3" },
   {
     action: "bullet",
     label: "-",
-    title: "Bullet list",
+    titleKey: "editor.toolbar.bullet",
     shortcut: "Ctrl/Cmd+Shift+8",
   },
   {
     action: "numbered",
     label: "1.",
-    title: "Numbered list",
+    titleKey: "editor.toolbar.numbered",
     shortcut: "Ctrl/Cmd+Shift+7",
   },
-  { action: "quote", label: '"', title: "Quote" },
+  { action: "quote", label: '"', titleKey: "editor.toolbar.quote" },
   {
     action: "link",
     label: "Link",
-    title: "Insert link",
+    labelKey: "editor.toolbar.link",
+    titleKey: "editor.toolbar.insertLink",
     shortcut: "Ctrl/Cmd+K",
   },
   {
     action: "inlineCode",
     label: "</>",
-    title: "Inline code",
+    titleKey: "editor.toolbar.inlineCode",
     shortcut: "Ctrl/Cmd+E",
   },
-  { action: "codeBlock", label: "{ }", title: "Code block" },
+  { action: "codeBlock", label: "{ }", titleKey: "editor.toolbar.codeBlock" },
 ];
 
 export function EditorFormPanel({
@@ -80,6 +88,7 @@ export function EditorFormPanel({
   updateForm,
   onSave,
 }: Props) {
+  const { t } = useI18n();
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
   const [editorMode, setEditorMode] = useState<"write" | "preview">("write");
   const bodyHistoryRef = useRef({
@@ -428,17 +437,15 @@ export function EditorFormPanel({
       style={{ animationDelay: "140ms" }}
     >
       <h2 className="font-display text-3xl font-semibold tracking-tight">
-        Article editor
+        {t("editor.articleEditor")}
       </h2>
-      <p className="mt-1 text-sm text-(--ink-soft)">
-        Compose, enrich, and ship with AI support in one workspace.
-      </p>
+      <p className="mt-1 text-sm text-(--ink-soft)">{t("editor.subtitle")}</p>
 
       {activeAiTask ? (
         <div className="mt-4 rounded-xl border border-(--line) bg-(--bg-soft) px-3 py-2 text-sm text-(--ink)">
           <div className="flex items-center gap-2">
             <span className="loading-spinner" aria-hidden="true" />
-            <span>AI is working: {activeAiTask}...</span>
+            <span>{t("editor.aiWorking", { task: activeAiTask })}</span>
           </div>
         </div>
       ) : null}
@@ -446,7 +453,7 @@ export function EditorFormPanel({
       <div className="mt-5 grid gap-3">
         <input
           className="form-control font-display text-xl"
-          placeholder="Title"
+          placeholder={t("editor.titlePlaceholder")}
           value={form.title}
           onChange={(event) =>
             updateForm((prev) => ({ ...prev, title: event.target.value }))
@@ -461,24 +468,24 @@ export function EditorFormPanel({
                 type="button"
                 title={
                   button.shortcut
-                    ? `${button.title} (${button.shortcut})`
-                    : button.title
+                    ? `${t(button.titleKey)} (${button.shortcut})`
+                    : t(button.titleKey)
                 }
                 aria-label={
                   button.shortcut
-                    ? `${button.title} (${button.shortcut})`
-                    : button.title
+                    ? `${t(button.titleKey)} (${button.shortcut})`
+                    : t(button.titleKey)
                 }
                 className="lift-card rounded-lg border border-(--line) bg-(--bg-base) px-2.5 py-1 text-xs font-semibold text-(--ink)"
                 onClick={() => handleFormat(button.action)}
               >
-                {button.label}
+                {button.labelKey ? t(button.labelKey) : button.label}
               </button>
             ))}
             <div className="ml-auto flex items-center gap-2">
               <button
                 type="button"
-                title="Write mode (Ctrl/Cmd+Shift+M)"
+                title={t("editor.writeMode")}
                 className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${
                   editorMode === "write"
                     ? "border-(--teal) bg-(--teal) text-(--bg-base)"
@@ -486,11 +493,11 @@ export function EditorFormPanel({
                 }`}
                 onClick={() => setEditorMode("write")}
               >
-                Write
+                {t("editor.write")}
               </button>
               <button
                 type="button"
-                title="Preview mode (Ctrl/Cmd+Shift+M)"
+                title={t("editor.previewMode")}
                 className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${
                   editorMode === "preview"
                     ? "border-(--teal) bg-(--teal) text-(--bg-base)"
@@ -498,7 +505,7 @@ export function EditorFormPanel({
                 }`}
                 onClick={() => setEditorMode("preview")}
               >
-                Preview
+                {t("editor.preview")}
               </button>
             </div>
           </div>
@@ -507,14 +514,14 @@ export function EditorFormPanel({
             <textarea
               ref={bodyRef}
               className="form-control min-h-80 leading-relaxed"
-              placeholder="Body"
+              placeholder={t("editor.bodyPlaceholder")}
               value={form.body}
               onChange={(event) => commitBodyChange(event.target.value)}
               onKeyDown={handleBodyKeyDown}
             />
           ) : (
             <div className="form-control min-h-80 min-w-0 space-y-3 overflow-auto leading-relaxed">
-              <MarkdownPreview markdown={form.body} />
+              <MarkdownPreview markdown={form.body} t={t} />
             </div>
           )}
         </div>
@@ -536,7 +543,10 @@ export function EditorFormPanel({
                 status: nextValue as Article["status"],
               }))
             }
-            options={ARTICLE_STATUS_OPTIONS}
+            options={ARTICLE_STATUS_OPTIONS.map((option) => ({
+              value: option.value,
+              label: t(option.label),
+            }))}
           />
 
           <SelectField
@@ -549,11 +559,13 @@ export function EditorFormPanel({
         </div>
 
         <details className="rounded-xl border border-(--line) bg-(--bg-surface) p-3">
-          <summary className="cursor-pointer font-medium">SEO</summary>
+          <summary className="cursor-pointer font-medium">
+            {t("editor.seo")}
+          </summary>
           <div className="mt-3 grid gap-2">
             <input
               className="form-control"
-              placeholder="SEO title"
+              placeholder={t("editor.seoTitle")}
               value={form.seoTitle}
               onChange={(event) =>
                 updateForm((prev) => ({
@@ -564,7 +576,7 @@ export function EditorFormPanel({
             />
             <textarea
               className="form-control"
-              placeholder="SEO description"
+              placeholder={t("editor.seoDescription")}
               value={form.seoDescription}
               onChange={(event) =>
                 updateForm((prev) => ({
@@ -575,7 +587,7 @@ export function EditorFormPanel({
             />
             <input
               className="form-control"
-              placeholder="keyword1, keyword2"
+              placeholder={t("editor.seoKeywords")}
               value={form.seoKeywords}
               onChange={(event) =>
                 updateForm((prev) => ({
@@ -592,14 +604,20 @@ export function EditorFormPanel({
           onClick={onSave}
           disabled={isSaving}
         >
-          {isSaving ? "Saving..." : "Save article"}
+          {isSaving ? t("editor.saving") : t("editor.saveArticle")}
         </button>
       </div>
     </section>
   );
 }
 
-function MarkdownPreview({ markdown }: { markdown: string }) {
+function MarkdownPreview({
+  markdown,
+  t,
+}: {
+  markdown: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const blocks: ReactNode[] = [];
   let index = 0;
@@ -763,7 +781,9 @@ function MarkdownPreview({ markdown }: { markdown: string }) {
   }
 
   if (!blocks.length) {
-    return <p className="text-sm text-(--ink-soft)">Nothing to preview yet.</p>;
+    return (
+      <p className="text-sm text-(--ink-soft)">{t("editor.previewEmpty")}</p>
+    );
   }
 
   return <Fragment>{blocks}</Fragment>;

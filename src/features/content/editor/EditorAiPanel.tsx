@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
+import { useI18n } from "@/components/providers/I18nProvider";
 import type { Category } from "@/features/content/list/types";
 import { SelectField } from "@/components/ui/SelectField";
 import { FieldLabel } from "@/components/ui/FieldLabel";
@@ -83,14 +84,18 @@ export function EditorAiPanel({
   onReplaceWithTranslation,
   onCancelTranslation,
 }: Props) {
+  const { t } = useI18n();
+
   return (
     <aside
       className="glass-card accent-panel stagger-in sticky top-4 h-fit rounded-3xl p-5"
       style={{ animationDelay: "260ms" }}
     >
-      <h3 className="font-display text-2xl font-semibold">AI panel</h3>
+      <h3 className="font-display text-2xl font-semibold">
+        {t("editor.aiPanel")}
+      </h3>
       <p className="mt-1 text-sm text-(--ink-soft)">
-        Generate, optimize, and localize without leaving this screen.
+        {t("editor.aiPanelSubtitle")}
       </p>
 
       <div className="ai-timeline mt-4 space-y-4">
@@ -98,40 +103,43 @@ export function EditorAiPanel({
           className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
           style={{ animationDelay: "320ms" }}
         >
-          <h4 className="font-display text-lg font-semibold">Generate</h4>
+          <h4 className="font-display text-lg font-semibold">
+            {t("editor.generateSection")}
+          </h4>
           <div className="mt-2 grid gap-2">
             <FieldLabel
-              text="Topic"
-              tip="Describe the subject plus audience/context. Example: 'Global warming in America for high school students'."
+              text={t("editor.topic")}
+              tip={t("editor.topicTip")}
               className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-(--ink-soft)"
               buttonClassName="inline-flex h-4 w-4 items-center justify-center rounded-full border border-(--line) bg-(--bg-surface) text-[10px] leading-none"
             />
             <input
               className="form-control"
-              placeholder="e.g. Global warming in America"
+              placeholder={t("editor.topicPlaceholder")}
               value={topic}
               onChange={(event) => onTopicChange(event.target.value)}
             />
-            <p className="text-xs text-(--ink-soft)">
-              Be specific: audience + angle + context gives better drafts.
-            </p>
+            <p className="text-xs text-(--ink-soft)">{t("editor.topicHelp")}</p>
 
             <FieldLabel
-              text="Tone"
-              tip="Controls writing style and voice. Use formal for reports, informal for social/blog voice, neutral for general publishing."
+              text={t("editor.tone")}
+              tip={t("editor.toneTip")}
               className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-(--ink-soft)"
               buttonClassName="inline-flex h-4 w-4 items-center justify-center rounded-full border border-(--line) bg-(--bg-surface) text-[10px] leading-none"
             />
             <SelectField
               value={tone}
               onChange={(nextValue) => onToneChange(nextValue as ToneOption)}
-              options={TONE_OPTIONS}
+              options={TONE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: t(option.label),
+              }))}
             />
-            <p className="text-xs text-(--ink-soft)">{TONE_HINTS[tone]}</p>
+            <p className="text-xs text-(--ink-soft)">{t(TONE_HINTS[tone])}</p>
 
             <FieldLabel
-              text="Target length (words)"
-              tip="Approximate article size in words. 450 is a quick brief, 900 a standard post, and 1400 a deeper long-form draft."
+              text={t("editor.length")}
+              tip={t("editor.lengthTip")}
               className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-(--ink-soft)"
               buttonClassName="inline-flex h-4 w-4 items-center justify-center rounded-full border border-(--line) bg-(--bg-surface) text-[10px] leading-none"
             />
@@ -145,8 +153,7 @@ export function EditorAiPanel({
               onBlur={onLengthInputBlur}
             />
             <p className="text-xs text-(--ink-soft)">
-              Controls article depth. Example: 450 = quick brief, 900 = full
-              post, 1400 = deep dive.
+              {t("editor.lengthHelp")}
             </p>
             <div className="flex flex-wrap gap-2">
               {LENGTH_PRESETS.map((preset) => (
@@ -156,7 +163,7 @@ export function EditorAiPanel({
                   className="rounded-full border border-(--line) bg-(--bg-surface) px-2 py-1 text-xs text-(--ink) hover:bg-(--bg-soft)"
                   onClick={() => onLengthInputChange(String(preset.words))}
                 >
-                  {preset.label} ({preset.words})
+                  {t(preset.label)} ({preset.words})
                 </button>
               ))}
             </div>
@@ -169,10 +176,10 @@ export function EditorAiPanel({
               {generatePending ? (
                 <span className="inline-flex items-center gap-2">
                   <span className="loading-spinner" aria-hidden="true" />
-                  Generating...
+                  {t("editor.generating")}
                 </span>
               ) : (
-                "Generate"
+                t("editor.generate")
               )}
             </button>
           </div>
@@ -183,10 +190,10 @@ export function EditorAiPanel({
           style={{ animationDelay: "390ms" }}
         >
           <h4 className="font-display text-lg font-semibold">
-            Category suggestion
+            {t("editor.categorySuggestion")}
           </h4>
           <button
-            title="Analyze text and suggest the best matching category"
+            title={t("editor.suggestCategory")}
             className="mt-2 rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
             disabled={categorizePending || !categories?.length}
             onClick={onSuggestCategory}
@@ -194,23 +201,25 @@ export function EditorAiPanel({
             {categorizePending ? (
               <span className="inline-flex items-center gap-2">
                 <span className="loading-spinner" aria-hidden="true" />
-                Suggesting...
+                {t("editor.suggesting")}
               </span>
             ) : (
-              "Suggest category"
+              t("editor.suggestCategory")
             )}
           </button>
 
           {categorySuggestion ? (
             <div className="mt-3 rounded-lg border border-(--line) bg-(--bg-soft) p-3 text-sm">
               <p>
-                Suggested category:{" "}
+                {t("editor.suggestedCategory")}{" "}
                 <strong>
-                  {suggestedCategory?.name ?? "No matching category"}
+                  {suggestedCategory?.name ?? t("editor.noMatchingCategory")}
                 </strong>
               </p>
               <p className="mt-1 text-xs text-(--ink-soft)">
-                Confidence: {Math.round(categorySuggestion.confidence * 100)}%
+                {t("editor.confidence", {
+                  value: Math.round(categorySuggestion.confidence * 100),
+                })}
               </p>
               <p className="mt-1 text-xs text-(--ink-soft)">
                 {categorySuggestion.rationale}
@@ -221,13 +230,13 @@ export function EditorAiPanel({
                   disabled={!suggestedCategory}
                   onClick={onApplyCategorySuggestion}
                 >
-                  Apply suggestion
+                  {t("editor.applySuggestion")}
                 </button>
                 <button
                   className="rounded-lg border border-(--line) px-3 py-1"
                   onClick={onDismissCategorySuggestion}
                 >
-                  Keep current
+                  {t("editor.keepCurrent")}
                 </button>
               </div>
             </div>
@@ -238,9 +247,11 @@ export function EditorAiPanel({
           className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
           style={{ animationDelay: "460ms" }}
         >
-          <h4 className="font-display text-lg font-semibold">SEO</h4>
+          <h4 className="font-display text-lg font-semibold">
+            {t("editor.seo")}
+          </h4>
           <button
-            title="Generate SEO title, meta description, and keywords from current article"
+            title={t("editor.seoFromText")}
             className="mt-2 rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
             disabled={seoPending}
             onClick={onSuggestSeo}
@@ -248,37 +259,41 @@ export function EditorAiPanel({
             {seoPending ? (
               <span className="inline-flex items-center gap-2">
                 <span className="loading-spinner" aria-hidden="true" />
-                Suggesting...
+                {t("editor.suggesting")}
               </span>
             ) : (
-              "Suggest from text"
+              t("editor.seoFromText")
             )}
           </button>
 
           {seoSuggestion ? (
             <div className="mt-3 rounded-lg border border-(--line) bg-(--bg-soft) p-3 text-sm">
-              <p className="font-medium">Proposed SEO metadata</p>
+              <p className="font-medium">{t("editor.proposedSeo")}</p>
               <p className="mt-2 text-xs text-(--ink-soft)">
-                Title: {seoSuggestion.seoTitle}
+                {t("editor.seoTitleLabel", { value: seoSuggestion.seoTitle })}
               </p>
               <p className="mt-1 text-xs text-(--ink-soft)">
-                Description: {seoSuggestion.seoDescription}
+                {t("editor.seoDescriptionLabel", {
+                  value: seoSuggestion.seoDescription,
+                })}
               </p>
               <p className="mt-1 text-xs text-(--ink-soft)">
-                Keywords: {seoSuggestion.seoKeywords.join(", ")}
+                {t("editor.seoKeywordsLabel", {
+                  value: seoSuggestion.seoKeywords.join(", "),
+                })}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base)"
                   onClick={onApplySeo}
                 >
-                  Apply SEO
+                  {t("editor.applySeo")}
                 </button>
                 <button
                   className="rounded-lg border border-(--line) px-3 py-1"
                   onClick={onDismissSeo}
                 >
-                  Keep current SEO
+                  {t("editor.keepCurrentSeo")}
                 </button>
               </div>
             </div>
@@ -289,23 +304,25 @@ export function EditorAiPanel({
           className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
           style={{ animationDelay: "530ms" }}
         >
-          <h4 className="font-display text-lg font-semibold">Translation</h4>
+          <h4 className="font-display text-lg font-semibold">
+            {t("editor.translation")}
+          </h4>
           <div className="mt-2 grid gap-2">
             <SelectField
               value={targetLocale}
               onChange={onTargetLocaleChange}
               options={TARGET_LANGUAGE_OPTIONS.map((option) => ({
                 value: option.value,
-                label: option.label,
+                label: t(option.label),
               }))}
             />
             <button
-              title="Translate current article into selected language"
+              title={t("editor.translate")}
               className="rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
               disabled={translatePending}
               onClick={async () => {
                 if (!form.title.trim() || !form.body.trim()) {
-                  toast.error("Title and body are required before translation");
+                  toast.error(t("editor.translationRequires"));
                   return;
                 }
 
@@ -315,17 +332,19 @@ export function EditorAiPanel({
               {translatePending ? (
                 <span className="inline-flex items-center gap-2">
                   <span className="loading-spinner" aria-hidden="true" />
-                  Translating...
+                  {t("editor.translating")}
                 </span>
               ) : (
-                "Translate"
+                t("editor.translate")
               )}
             </button>
 
             {translationPreview ? (
               <div className="rounded-lg border border-(--line) bg-(--bg-soft) p-3">
                 <p className="text-sm font-medium">
-                  Translation ready ({translationPreview.locale})
+                  {t("editor.translationReadyLabel", {
+                    locale: translationPreview.locale,
+                  })}
                 </p>
                 <p className="mt-1 line-clamp-2 text-xs text-(--ink-soft)">
                   {translationPreview.title}
@@ -335,19 +354,19 @@ export function EditorAiPanel({
                     className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base)"
                     onClick={onCreateTranslatedArticle}
                   >
-                    Create new article
+                    {t("editor.createNewArticle")}
                   </button>
                   <button
                     className="rounded-lg border border-(--line) bg-(--bg-surface) px-3 py-1"
                     onClick={onReplaceWithTranslation}
                   >
-                    Replace current
+                    {t("editor.replaceCurrent")}
                   </button>
                   <button
                     className="rounded-lg border border-(--line) px-3 py-1"
                     onClick={onCancelTranslation}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                 </div>
               </div>
