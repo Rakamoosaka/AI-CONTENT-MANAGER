@@ -11,138 +11,23 @@ import {
 } from "@/features/content/list/hooks";
 import type { Article } from "@/features/content/list/types";
 import { apiMutation } from "@/lib/api/client";
-import { SelectField } from "@/components/ui/SelectField";
+import { TARGET_LANGUAGE_OPTIONS } from "./constants";
+import { EditorAiPanel } from "./EditorAiPanel";
+import { EditorFormPanel } from "./EditorFormPanel";
+import type {
+  CategorySuggestionState,
+  FormState,
+  SeoSuggestionState,
+  ToneOption,
+  TranslationPreviewState,
+} from "./types";
+import {
+  detectLocaleFromText,
+  mapArticleToForm,
+  toArticlePayload,
+} from "./utils";
 
 type Props = { articleId?: string };
-
-type ToneOption = "formal" | "informal" | "neutral";
-
-const TONE_OPTIONS: Array<{ value: ToneOption; label: string }> = [
-  { value: "formal", label: "Formal" },
-  { value: "informal", label: "Informal" },
-  { value: "neutral", label: "Neutral" },
-];
-
-const TONE_HINTS: Record<ToneOption, string> = {
-  formal:
-    "Professional and structured. Good for reports and executive readers.",
-  informal:
-    "Conversational and friendly. Good for social and community audiences.",
-  neutral: "Balanced and clear. Good default for general blog content.",
-};
-
-const LENGTH_PRESETS = [
-  { label: "Short", words: 450 },
-  { label: "Standard", words: 900 },
-  { label: "Long", words: 1400 },
-] as const;
-
-function FieldLabel({ text, tip }: { text: string; tip: string }) {
-  return (
-    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-(--ink-soft)">
-      <span>{text}</span>
-      <span className="group relative inline-flex">
-        <button
-          type="button"
-          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-(--line) bg-(--bg-surface) text-[10px] leading-none"
-          aria-label={`${text} help`}
-        >
-          ?
-        </button>
-        <span className="pointer-events-none absolute left-6 top-1/2 z-20 hidden w-64 max-w-[calc(100vw-2rem)] -translate-y-1/2 rounded-lg border border-(--line) bg-(--bg-surface) p-2 text-xs font-normal text-(--ink) shadow-lg group-hover:block group-focus-within:block">
-          {tip}
-        </span>
-      </span>
-    </div>
-  );
-}
-
-const TARGET_LANGUAGE_OPTIONS = [
-  { value: "ru", label: "Russian" },
-  { value: "en", label: "English" },
-  { value: "kk", label: "Kazakh" },
-  { value: "zh", label: "Chinese" },
-] as const;
-
-type FormState = {
-  title: string;
-  body: string;
-  status: Article["status"];
-  locale: string;
-  categoryId: string;
-  seoTitle: string;
-  seoDescription: string;
-  seoKeywords: string;
-};
-
-type CategorySuggestionState = {
-  categoryId: string | null;
-  confidence: number;
-  rationale: string;
-};
-
-type TranslationPreviewState = {
-  title: string;
-  body: string;
-  locale: string;
-};
-
-type SeoSuggestionState = {
-  seoTitle: string;
-  seoDescription: string;
-  seoKeywords: string[];
-};
-
-const EMPTY_FORM: FormState = {
-  title: "",
-  body: "",
-  status: "draft",
-  locale: "ru",
-  categoryId: "",
-  seoTitle: "",
-  seoDescription: "",
-  seoKeywords: "",
-};
-
-function mapArticleToForm(article?: Article): FormState {
-  if (!article) {
-    return EMPTY_FORM;
-  }
-
-  return {
-    title: article.title,
-    body: article.body,
-    status: article.status,
-    locale: article.locale,
-    categoryId: article.categoryId ?? "",
-    seoTitle: article.seoTitle ?? "",
-    seoDescription: article.seoDescription ?? "",
-    seoKeywords: (article.seoKeywords ?? []).join(", "),
-  };
-}
-
-function detectLocaleFromText(text: string): string {
-  const sample = text.slice(0, 2500);
-
-  const zhMatches = sample.match(/[\u4e00-\u9fff]/g)?.length ?? 0;
-  if (zhMatches >= 8) {
-    return "zh";
-  }
-
-  const kazakhSpecificMatches = sample.match(/[әғқңөұүһі]/gi)?.length ?? 0;
-  if (kazakhSpecificMatches >= 3) {
-    return "kk";
-  }
-
-  const cyrillicMatches = sample.match(/[а-яё]/gi)?.length ?? 0;
-  const latinMatches = sample.match(/[a-z]/gi)?.length ?? 0;
-
-  if (cyrillicMatches > latinMatches) {
-    return "ru";
-  }
-
-  return "en";
-}
 
 export function EditorScreen({ articleId }: Props) {
   const router = useRouter();
@@ -236,571 +121,220 @@ export function EditorScreen({ articleId }: Props) {
     (translateMutation.isPending && "Translating article") ||
     null;
 
+  async function handleSaveArticle() {
+    try {
+      const saved = await saveMutation.mutateAsync(toArticlePayload(form));
+      setDraftForm(null);
+      toast.success("Article saved");
+      if (!articleId) {
+        router.push(`/content/${saved.id}`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Save failed");
+    }
+  }
+
+  async function handleGenerate() {
+    try {
+      const data = await generateMutation.mutateAsync({
+        action: "generateContent",
+        input: { topic, tone, targetLength },
+      });
+
+      const detectedLocale = detectLocaleFromText(
+        `${data.title}\n${data.body}`,
+      );
+
+      updateForm((prev) => ({
+        ...prev,
+        title: data.title,
+        body: data.body,
+        locale: detectedLocale,
+      }));
+    } catch {
+      toast.error("Generation failed");
+    }
+  }
+
+  async function handleSuggestCategory() {
+    try {
+      const data = await categorizeMutation.mutateAsync({
+        action: "categorize",
+        input: {
+          body: form.body,
+          categories: categories ?? [],
+        },
+      });
+
+      setCategorySuggestion(data);
+
+      if (!data.categoryId) {
+        toast.info("No confident category match found");
+      }
+    } catch {
+      toast.error("Category suggestion failed");
+    }
+  }
+
+  async function handleSuggestSeo() {
+    try {
+      const data = await seoMutation.mutateAsync({
+        action: "seoSuggestions",
+        input: {
+          title: form.title,
+          body: form.body,
+          locale: form.locale,
+        },
+      });
+      setSeoSuggestion(data);
+      toast.success("SEO suggestion ready. Review and apply if you want.");
+    } catch {
+      toast.error("SEO suggestions failed");
+    }
+  }
+
+  async function handleTranslate() {
+    try {
+      const data = await translateMutation.mutateAsync({
+        action: "translateContent",
+        input: {
+          title: form.title,
+          body: form.body,
+          targetLocale,
+        },
+      });
+
+      setTranslationPreview(data);
+      toast.success("Translation ready. Choose how to apply it.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Translation failed",
+      );
+    }
+  }
+
+  async function handleCreateTranslatedArticle() {
+    if (!translationPreview) {
+      return;
+    }
+
+    try {
+      const created = await apiMutation<Article>("/api/articles", "POST", {
+        ...toArticlePayload(form),
+        title: translationPreview.title,
+        body: translationPreview.body,
+        locale: translationPreview.locale,
+      });
+
+      setTranslationPreview(null);
+      toast.success("Translated article created");
+      router.push(`/content/${created.id}`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create translated article",
+      );
+    }
+  }
+
   return (
     <div className="grid items-start gap-5 xl:grid-cols-[3fr_2fr]">
-      <section
-        className="glass-card editor-grid-pattern stagger-in rounded-3xl p-5"
-        style={{ animationDelay: "140ms" }}
-      >
-        <h2 className="font-display text-3xl font-semibold tracking-tight">
-          Article editor
-        </h2>
-        <p className="mt-1 text-sm text-(--ink-soft)">
-          Compose, enrich, and ship with AI support in one workspace.
-        </p>
+      <EditorFormPanel
+        form={form}
+        activeAiTask={activeAiTask}
+        articleCategoryOptions={articleCategoryOptions}
+        localeOptions={localeOptions}
+        isSaving={saveMutation.isPending}
+        updateForm={updateForm}
+        onSave={handleSaveArticle}
+      />
 
-        {activeAiTask ? (
-          <div className="mt-4 rounded-xl border border-(--line) bg-(--bg-soft) px-3 py-2 text-sm text-(--ink)">
-            <div className="flex items-center gap-2">
-              <span className="loading-spinner" aria-hidden="true" />
-              <span>AI is working: {activeAiTask}...</span>
-            </div>
-          </div>
-        ) : null}
+      <EditorAiPanel
+        categories={categories}
+        form={form}
+        tone={tone}
+        topic={topic}
+        targetLengthInput={targetLengthInput}
+        targetLocale={targetLocale}
+        generatePending={generateMutation.isPending}
+        categorizePending={categorizeMutation.isPending}
+        seoPending={seoMutation.isPending}
+        translatePending={translateMutation.isPending}
+        categorySuggestion={categorySuggestion}
+        suggestedCategory={suggestedCategory}
+        seoSuggestion={seoSuggestion}
+        translationPreview={translationPreview}
+        onTopicChange={setTopic}
+        onToneChange={setTone}
+        onLengthInputChange={setTargetLengthInput}
+        onLengthInputBlur={() => {
+          const parsed = Number(targetLengthInput);
+          if (!Number.isFinite(parsed)) {
+            setTargetLengthInput("120");
+            return;
+          }
 
-        <div className="mt-5 grid gap-3">
-          <input
-            className="form-control font-display text-xl"
-            placeholder="Title"
-            value={form.title}
-            onChange={(event) =>
-              updateForm((prev) => ({ ...prev, title: event.target.value }))
-            }
-          />
+          setTargetLengthInput(
+            String(Math.min(1500, Math.max(120, Math.round(parsed)))),
+          );
+        }}
+        onTargetLocaleChange={setTargetLocale}
+        onGenerate={handleGenerate}
+        onSuggestCategory={handleSuggestCategory}
+        onApplyCategorySuggestion={() => {
+          if (!suggestedCategory) {
+            return;
+          }
 
-          <div className="relative">
-            <textarea
-              className="form-control min-h-80 leading-relaxed"
-              placeholder="Body"
-              value={form.body}
-              onChange={(event) =>
-                updateForm((prev) => ({ ...prev, body: event.target.value }))
-              }
-            />
-          </div>
+          updateForm((prev) => ({
+            ...prev,
+            categoryId: suggestedCategory.id,
+          }));
+          setCategorySuggestion(null);
+          toast.success("Suggested category applied");
+        }}
+        onDismissCategorySuggestion={() => {
+          setCategorySuggestion(null);
+          toast.info("Category suggestion dismissed");
+        }}
+        onSuggestSeo={handleSuggestSeo}
+        onApplySeo={() => {
+          if (!seoSuggestion) {
+            return;
+          }
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <SelectField
-              value={form.categoryId}
-              onChange={(nextValue) =>
-                updateForm((prev) => ({ ...prev, categoryId: nextValue }))
-              }
-              options={articleCategoryOptions}
-            />
+          updateForm((prev) => ({
+            ...prev,
+            seoTitle: seoSuggestion.seoTitle,
+            seoDescription: seoSuggestion.seoDescription,
+            seoKeywords: seoSuggestion.seoKeywords.join(", "),
+          }));
+          setSeoSuggestion(null);
+          toast.success("SEO suggestion applied");
+        }}
+        onDismissSeo={() => {
+          setSeoSuggestion(null);
+          toast.info("SEO suggestion dismissed");
+        }}
+        onTranslate={handleTranslate}
+        onCreateTranslatedArticle={handleCreateTranslatedArticle}
+        onReplaceWithTranslation={() => {
+          if (!translationPreview) {
+            return;
+          }
 
-            <SelectField
-              value={form.status}
-              onChange={(nextValue) =>
-                updateForm((prev) => ({
-                  ...prev,
-                  status: nextValue as Article["status"],
-                }))
-              }
-              options={[
-                { value: "draft", label: "Draft" },
-                { value: "published", label: "Published" },
-              ]}
-            />
-
-            <SelectField
-              value={form.locale}
-              onChange={(nextValue) =>
-                updateForm((prev) => ({ ...prev, locale: nextValue }))
-              }
-              options={localeOptions}
-            />
-          </div>
-
-          <details className="rounded-xl border border-(--line) bg-(--bg-surface) p-3">
-            <summary className="cursor-pointer font-medium">SEO</summary>
-            <div className="mt-3 grid gap-2">
-              <input
-                className="form-control"
-                placeholder="SEO title"
-                value={form.seoTitle}
-                onChange={(event) =>
-                  updateForm((prev) => ({
-                    ...prev,
-                    seoTitle: event.target.value,
-                  }))
-                }
-              />
-              <textarea
-                className="form-control"
-                placeholder="SEO description"
-                value={form.seoDescription}
-                onChange={(event) =>
-                  updateForm((prev) => ({
-                    ...prev,
-                    seoDescription: event.target.value,
-                  }))
-                }
-              />
-              <input
-                className="form-control"
-                placeholder="keyword1, keyword2"
-                value={form.seoKeywords}
-                onChange={(event) =>
-                  updateForm((prev) => ({
-                    ...prev,
-                    seoKeywords: event.target.value,
-                  }))
-                }
-              />
-            </div>
-          </details>
-
-          <button
-            className="lift-card rounded-xl bg-(--teal) px-4 py-2 font-semibold text-(--bg-base)"
-            onClick={async () => {
-              try {
-                const saved = await saveMutation.mutateAsync({
-                  title: form.title,
-                  body: form.body,
-                  status: form.status,
-                  locale: form.locale,
-                  categoryId: form.categoryId || null,
-                  seoTitle: form.seoTitle || null,
-                  seoDescription: form.seoDescription || null,
-                  seoKeywords: form.seoKeywords
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter(Boolean),
-                });
-                setDraftForm(null); // Clear draft after successful save
-                toast.success("Article saved");
-                if (!articleId) {
-                  router.push(`/content/${saved.id}`);
-                }
-              } catch (error) {
-                toast.error(
-                  error instanceof Error ? error.message : "Save failed",
-                );
-              }
-            }}
-          >
-            Save article
-          </button>
-        </div>
-      </section>
-
-      <aside
-        className="glass-card accent-panel stagger-in sticky top-4 h-fit rounded-3xl p-5"
-        style={{ animationDelay: "260ms" }}
-      >
-        <h3 className="font-display text-2xl font-semibold">AI panel</h3>
-        <p className="mt-1 text-sm text-(--ink-soft)">
-          Generate, optimize, and localize without leaving this screen.
-        </p>
-
-        <div className="ai-timeline mt-4 space-y-4">
-          <section
-            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
-            style={{ animationDelay: "320ms" }}
-          >
-            <h4 className="font-display text-lg font-semibold">Generate</h4>
-            <div className="mt-2 grid gap-2">
-              <FieldLabel
-                text="Topic"
-                tip="Describe the subject plus audience/context. Example: 'Global warming in America for high school students'."
-              />
-              <input
-                className="form-control"
-                placeholder="e.g. Global warming in America"
-                value={topic}
-                onChange={(event) => setTopic(event.target.value)}
-              />
-              <p className="text-xs text-(--ink-soft)">
-                Be specific: audience + angle + context gives better drafts.
-              </p>
-
-              <FieldLabel
-                text="Tone"
-                tip="Controls writing style and voice. Use formal for reports, informal for social/blog voice, neutral for general publishing."
-              />
-              <SelectField
-                value={tone}
-                onChange={(nextValue) => setTone(nextValue as ToneOption)}
-                options={TONE_OPTIONS}
-              />
-              <p className="text-xs text-(--ink-soft)">{TONE_HINTS[tone]}</p>
-
-              <FieldLabel
-                text="Target length (words)"
-                tip="Approximate article size in words. 450 is a quick brief, 900 a standard post, and 1400 a deeper long-form draft."
-              />
-              <input
-                type="number"
-                className="form-control"
-                min={120}
-                max={1500}
-                value={targetLengthInput}
-                onChange={(event) => setTargetLengthInput(event.target.value)}
-                onBlur={() => {
-                  const parsed = Number(targetLengthInput);
-                  if (!Number.isFinite(parsed)) {
-                    setTargetLengthInput("120");
-                    return;
-                  }
-
-                  setTargetLengthInput(
-                    String(Math.min(1500, Math.max(120, Math.round(parsed)))),
-                  );
-                }}
-              />
-              <p className="text-xs text-(--ink-soft)">
-                Controls article depth. Example: 450 = quick brief, 900 = full
-                post, 1400 = deep dive.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {LENGTH_PRESETS.map((preset) => (
-                  <button
-                    key={preset.words}
-                    type="button"
-                    className="rounded-full border border-(--line) bg-(--bg-surface) px-2 py-1 text-xs text-(--ink) hover:bg-(--bg-soft)"
-                    onClick={() => setTargetLengthInput(String(preset.words))}
-                  >
-                    {preset.label} ({preset.words})
-                  </button>
-                ))}
-              </div>
-
-              <button
-                className="lift-card rounded-lg bg-(--amber) px-3 py-2 font-semibold text-(--teal)"
-                disabled={generateMutation.isPending}
-                onClick={async () => {
-                  try {
-                    const data = await generateMutation.mutateAsync({
-                      action: "generateContent",
-                      input: { topic, tone, targetLength },
-                    });
-
-                    const detectedLocale = detectLocaleFromText(
-                      `${data.title}\n${data.body}`,
-                    );
-
-                    updateForm((prev) => ({
-                      ...prev,
-                      title: data.title,
-                      body: data.body,
-                      locale: detectedLocale,
-                    }));
-                  } catch {
-                    toast.error("Generation failed");
-                  }
-                }}
-              >
-                {generateMutation.isPending ? (
-                  <span className="inline-flex items-center gap-2">
-                    <span className="loading-spinner" aria-hidden="true" />
-                    Generating...
-                  </span>
-                ) : (
-                  "Generate"
-                )}
-              </button>
-            </div>
-          </section>
-
-          <section
-            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
-            style={{ animationDelay: "390ms" }}
-          >
-            <h4 className="font-display text-lg font-semibold">
-              Category suggestion
-            </h4>
-            <button
-              title="Analyze text and suggest the best matching category"
-              className="mt-2 rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
-              disabled={categorizeMutation.isPending || !categories?.length}
-              onClick={async () => {
-                try {
-                  const data = await categorizeMutation.mutateAsync({
-                    action: "categorize",
-                    input: {
-                      body: form.body,
-                      categories: categories ?? [],
-                    },
-                  });
-                  setCategorySuggestion(data);
-
-                  if (!data.categoryId) {
-                    toast.info("No confident category match found");
-                  }
-                } catch {
-                  toast.error("Category suggestion failed");
-                }
-              }}
-            >
-              {categorizeMutation.isPending ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="loading-spinner" aria-hidden="true" />
-                  Suggesting...
-                </span>
-              ) : (
-                "Suggest category"
-              )}
-            </button>
-
-            {categorySuggestion ? (
-              <div className="mt-3 rounded-lg border border-(--line) bg-(--bg-soft) p-3 text-sm">
-                <p>
-                  Suggested category:{" "}
-                  <strong>
-                    {suggestedCategory?.name ?? "No matching category"}
-                  </strong>
-                </p>
-                <p className="mt-1 text-xs text-(--ink-soft)">
-                  Confidence: {Math.round(categorySuggestion.confidence * 100)}%
-                </p>
-                <p className="mt-1 text-xs text-(--ink-soft)">
-                  {categorySuggestion.rationale}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base) disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!suggestedCategory}
-                    onClick={() => {
-                      if (!suggestedCategory) {
-                        return;
-                      }
-
-                      updateForm((prev) => ({
-                        ...prev,
-                        categoryId: suggestedCategory.id,
-                      }));
-                      setCategorySuggestion(null);
-                      toast.success("Suggested category applied");
-                    }}
-                  >
-                    Apply suggestion
-                  </button>
-                  <button
-                    className="rounded-lg border border-(--line) px-3 py-1"
-                    onClick={() => {
-                      setCategorySuggestion(null);
-                      toast.info("Category suggestion dismissed");
-                    }}
-                  >
-                    Keep current
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </section>
-
-          <section
-            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
-            style={{ animationDelay: "460ms" }}
-          >
-            <h4 className="font-display text-lg font-semibold">SEO</h4>
-            <button
-              title="Generate SEO title, meta description, and keywords from current article"
-              className="mt-2 rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
-              disabled={seoMutation.isPending}
-              onClick={async () => {
-                try {
-                  const data = await seoMutation.mutateAsync({
-                    action: "seoSuggestions",
-                    input: {
-                      title: form.title,
-                      body: form.body,
-                      locale: form.locale,
-                    },
-                  });
-                  setSeoSuggestion(data);
-                  toast.success(
-                    "SEO suggestion ready. Review and apply if you want.",
-                  );
-                } catch {
-                  toast.error("SEO suggestions failed");
-                }
-              }}
-            >
-              {seoMutation.isPending ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="loading-spinner" aria-hidden="true" />
-                  Suggesting...
-                </span>
-              ) : (
-                "Suggest from text"
-              )}
-            </button>
-
-            {seoSuggestion ? (
-              <div className="mt-3 rounded-lg border border-(--line) bg-(--bg-soft) p-3 text-sm">
-                <p className="font-medium">Proposed SEO metadata</p>
-                <p className="mt-2 text-xs text-(--ink-soft)">
-                  Title: {seoSuggestion.seoTitle}
-                </p>
-                <p className="mt-1 text-xs text-(--ink-soft)">
-                  Description: {seoSuggestion.seoDescription}
-                </p>
-                <p className="mt-1 text-xs text-(--ink-soft)">
-                  Keywords: {seoSuggestion.seoKeywords.join(", ")}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base)"
-                    onClick={() => {
-                      updateForm((prev) => ({
-                        ...prev,
-                        seoTitle: seoSuggestion.seoTitle,
-                        seoDescription: seoSuggestion.seoDescription,
-                        seoKeywords: seoSuggestion.seoKeywords.join(", "),
-                      }));
-                      setSeoSuggestion(null);
-                      toast.success("SEO suggestion applied");
-                    }}
-                  >
-                    Apply SEO
-                  </button>
-                  <button
-                    className="rounded-lg border border-(--line) px-3 py-1"
-                    onClick={() => {
-                      setSeoSuggestion(null);
-                      toast.info("SEO suggestion dismissed");
-                    }}
-                  >
-                    Keep current SEO
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </section>
-
-          <section
-            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
-            style={{ animationDelay: "530ms" }}
-          >
-            <h4 className="font-display text-lg font-semibold">Translation</h4>
-            <div className="mt-2 grid gap-2">
-              <SelectField
-                value={targetLocale}
-                onChange={setTargetLocale}
-                options={TARGET_LANGUAGE_OPTIONS.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
-              />
-              <button
-                title="Translate current article into selected language"
-                className="rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
-                disabled={translateMutation.isPending}
-                onClick={async () => {
-                  if (!form.title.trim() || !form.body.trim()) {
-                    toast.error(
-                      "Title and body are required before translation",
-                    );
-                    return;
-                  }
-
-                  try {
-                    const data = await translateMutation.mutateAsync({
-                      action: "translateContent",
-                      input: {
-                        title: form.title,
-                        body: form.body,
-                        targetLocale,
-                      },
-                    });
-
-                    setTranslationPreview(data);
-                    toast.success("Translation ready. Choose how to apply it.");
-                  } catch (error) {
-                    toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : "Translation failed",
-                    );
-                  }
-                }}
-              >
-                {translateMutation.isPending ? (
-                  <span className="inline-flex items-center gap-2">
-                    <span className="loading-spinner" aria-hidden="true" />
-                    Translating...
-                  </span>
-                ) : (
-                  "Translate"
-                )}
-              </button>
-
-              {translationPreview ? (
-                <div className="rounded-lg border border-(--line) bg-(--bg-soft) p-3">
-                  <p className="text-sm font-medium">
-                    Translation ready ({translationPreview.locale})
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-(--ink-soft)">
-                    {translationPreview.title}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base)"
-                      onClick={async () => {
-                        try {
-                          const created = await apiMutation<Article>(
-                            "/api/articles",
-                            "POST",
-                            {
-                              title: translationPreview.title,
-                              body: translationPreview.body,
-                              status: form.status,
-                              locale: translationPreview.locale,
-                              categoryId: form.categoryId || null,
-                              seoTitle: form.seoTitle || null,
-                              seoDescription: form.seoDescription || null,
-                              seoKeywords: form.seoKeywords
-                                .split(",")
-                                .map((item) => item.trim())
-                                .filter(Boolean),
-                            },
-                          );
-
-                          setTranslationPreview(null);
-                          toast.success("Translated article created");
-                          router.push(`/content/${created.id}`);
-                        } catch (error) {
-                          toast.error(
-                            error instanceof Error
-                              ? error.message
-                              : "Failed to create translated article",
-                          );
-                        }
-                      }}
-                    >
-                      Create new article
-                    </button>
-                    <button
-                      className="rounded-lg border border-(--line) bg-(--bg-surface) px-3 py-1"
-                      onClick={() => {
-                        updateForm((prev) => ({
-                          ...prev,
-                          title: translationPreview.title,
-                          body: translationPreview.body,
-                          locale: translationPreview.locale,
-                        }));
-                        setTranslationPreview(null);
-                        toast.success(
-                          "Current article replaced with translation",
-                        );
-                      }}
-                    >
-                      Replace current
-                    </button>
-                    <button
-                      className="rounded-lg border border-(--line) px-3 py-1"
-                      onClick={() => setTranslationPreview(null)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        </div>
-      </aside>
+          updateForm((prev) => ({
+            ...prev,
+            title: translationPreview.title,
+            body: translationPreview.body,
+            locale: translationPreview.locale,
+          }));
+          setTranslationPreview(null);
+          toast.success("Current article replaced with translation");
+        }}
+        onCancelTranslation={() => setTranslationPreview(null)}
+      />
     </div>
   );
 }

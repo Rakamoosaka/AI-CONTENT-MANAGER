@@ -2,29 +2,37 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiGetWithMeta, apiMutation } from "@/lib/api/client";
-import type { Article, ArticleListMeta, Category, DashboardStats } from "./types";
+import type {
+  Article,
+  ArticleListMeta,
+  Category,
+  DashboardStats,
+} from "./types";
+import { contentKeys, type ArticleFilters } from "./query-keys";
+
+function invalidateContentQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  queryClient.invalidateQueries({ queryKey: contentKeys.articles() });
+  queryClient.invalidateQueries({ queryKey: contentKeys.categories() });
+  queryClient.invalidateQueries({ queryKey: contentKeys.dashboard() });
+}
 
 export function useCategories() {
   return useQuery({
-    queryKey: ["categories"],
+    queryKey: contentKeys.categories(),
     queryFn: () => apiGet<Category[]>("/api/categories"),
   });
 }
 
 export function useDashboardStats() {
   return useQuery({
-    queryKey: ["dashboard-stats"],
+    queryKey: contentKeys.dashboard(),
     queryFn: () => apiGet<DashboardStats>("/api/dashboard"),
   });
 }
 
-export function useArticles(filters: {
-  search?: string;
-  status?: string;
-  categoryId?: string;
-  page: number;
-  pageSize: number;
-}) {
+export function useArticles(filters: ArticleFilters) {
   const params = new URLSearchParams();
   if (filters.search) params.set("search", filters.search);
   if (filters.status) params.set("status", filters.status);
@@ -33,16 +41,18 @@ export function useArticles(filters: {
   params.set("pageSize", String(filters.pageSize));
 
   return useQuery({
-    queryKey: ["articles", filters],
+    queryKey: contentKeys.articleList(filters),
     queryFn: () =>
-      apiGetWithMeta<Article[], ArticleListMeta>(`/api/articles?${params.toString()}`),
+      apiGetWithMeta<Article[], ArticleListMeta>(
+        `/api/articles?${params.toString()}`,
+      ),
   });
 }
 
 export function useArticle(id?: string) {
   return useQuery({
     enabled: Boolean(id),
-    queryKey: ["article", id],
+    queryKey: contentKeys.article(id),
     queryFn: () => apiGet<Article>(`/api/articles/${id}`),
   });
 }
@@ -55,9 +65,10 @@ export function useUpsertArticle(id?: string) {
         ? apiMutation<Article>(`/api/articles/${id}`, "PATCH", payload)
         : apiMutation<Article>("/api/articles", "POST", payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["articles"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      if (id) queryClient.invalidateQueries({ queryKey: ["article", id] });
+      invalidateContentQueries(queryClient);
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: contentKeys.article(id) });
+      }
     },
   });
 }
@@ -65,10 +76,10 @@ export function useUpsertArticle(id?: string) {
 export function useDeleteArticle() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiMutation<{ deleted: true }>(`/api/articles/${id}`, "DELETE"),
+    mutationFn: (id: string) =>
+      apiMutation<{ deleted: true }>(`/api/articles/${id}`, "DELETE"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["articles"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      invalidateContentQueries(queryClient);
     },
   });
 }
@@ -76,13 +87,18 @@ export function useDeleteArticle() {
 export function useBulkCategorize() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (assignments: Array<{ articleId: string; categoryId: string | null }>) =>
-      apiMutation<{ updated: number }>("/api/articles/bulk-categorize", "POST", {
-        assignments,
-      }),
+    mutationFn: (
+      assignments: Array<{ articleId: string; categoryId: string | null }>,
+    ) =>
+      apiMutation<{ updated: number }>(
+        "/api/articles/bulk-categorize",
+        "POST",
+        {
+          assignments,
+        },
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["articles"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      invalidateContentQueries(queryClient);
     },
   });
 }
@@ -95,8 +111,7 @@ export function useUpsertCategory(id?: string) {
         ? apiMutation<Category>(`/api/categories/${id}`, "PATCH", payload)
         : apiMutation<Category>("/api/categories", "POST", payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      invalidateContentQueries(queryClient);
     },
   });
 }
@@ -107,8 +122,7 @@ export function useDeleteCategory() {
     mutationFn: (id: string) =>
       apiMutation<{ deleted: true }>(`/api/categories/${id}`, "DELETE"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      invalidateContentQueries(queryClient);
     },
   });
 }

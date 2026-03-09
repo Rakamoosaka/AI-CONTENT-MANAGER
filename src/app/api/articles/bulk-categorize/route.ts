@@ -1,18 +1,21 @@
 import { bulkCategorizeSchema } from "@/lib/validators/articles";
-import { fail, ok } from "@/lib/api/envelope";
+import { ok } from "@/lib/api/envelope";
+import { readJsonOrFail, validateOrFail } from "@/lib/api/route-utils";
 import { bulkCategorize } from "@/lib/db/repositories/articles";
 
 export async function POST(req: Request) {
-  const json = await req.json();
-  const parsed = bulkCategorizeSchema.safeParse(json);
+  const jsonResult = await readJsonOrFail(req);
+  if (!jsonResult.ok) {
+    return jsonResult.response;
+  }
 
-  if (!parsed.success) {
-    return fail(
-      "VALIDATION_ERROR",
-      "Invalid assignments payload",
-      422,
-      parsed.error.flatten(),
-    );
+  const parsed = validateOrFail(
+    bulkCategorizeSchema,
+    jsonResult.data,
+    "Invalid assignments payload",
+  );
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
   await bulkCategorize(parsed.data.assignments);

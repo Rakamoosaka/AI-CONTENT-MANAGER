@@ -3,6 +3,10 @@ import { v4 as uuid } from "uuid";
 import { db } from "@/lib/db/client";
 import { articles, categories } from "@/lib/db/schema";
 import { toExcerpt } from "@/lib/utils";
+import {
+  serializeSeoKeywords,
+  withSeoKeywords,
+} from "@/lib/db/mappers/articles";
 
 type ListInput = {
   search?: string;
@@ -58,12 +62,7 @@ export async function listArticles(input: ListInput) {
     .where(where);
 
   return {
-    items: rows.map((row: (typeof rows)[number]) => ({
-      ...row,
-      seoKeywords: row.seoKeywords
-        ? (JSON.parse(row.seoKeywords) as string[])
-        : [],
-    })),
+    items: rows.map((row: (typeof rows)[number]) => withSeoKeywords(row)),
     total: totalRows[0]?.total ?? 0,
     page: input.page,
     pageSize: input.pageSize,
@@ -76,16 +75,10 @@ export async function getArticleById(id: string) {
     .from(articles)
     .where(eq(articles.id, id))
     .limit(1)
-    .then((res: Array<(typeof articles.$inferSelect)>) => res[0]);
+    .then((res: Array<typeof articles.$inferSelect>) => res[0]);
 
   if (!row) return null;
-
-  return {
-    ...row,
-    seoKeywords: row.seoKeywords
-      ? (JSON.parse(row.seoKeywords) as string[])
-      : [],
-  };
+  return withSeoKeywords(row);
 }
 
 export async function createArticle(input: {
@@ -110,7 +103,7 @@ export async function createArticle(input: {
     locale: input.locale,
     seoTitle: input.seoTitle ?? null,
     seoDescription: input.seoDescription ?? null,
-    seoKeywords: JSON.stringify(input.seoKeywords ?? []),
+    seoKeywords: serializeSeoKeywords(input.seoKeywords),
     categoryId: input.categoryId ?? null,
     createdAt: now,
     updatedAt: now,
@@ -150,8 +143,8 @@ export async function updateArticle(
       seoDescription: input.seoDescription ?? existing.seoDescription,
       seoKeywords:
         input.seoKeywords !== undefined
-          ? JSON.stringify(input.seoKeywords ?? [])
-          : JSON.stringify(existing.seoKeywords ?? []),
+          ? serializeSeoKeywords(input.seoKeywords)
+          : serializeSeoKeywords(existing.seoKeywords),
       categoryId: input.categoryId ?? existing.categoryId,
       updatedAt: Date.now(),
     })

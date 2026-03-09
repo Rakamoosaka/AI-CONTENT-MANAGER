@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const nav: Array<{
   href: Route;
@@ -65,11 +65,10 @@ function ShellPath() {
 
 export function AppShell({ children }: Props) {
   const pathname = usePathname();
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-
-  useEffect(() => {
-    setIsMobileNavOpen(false);
-  }, [pathname]);
+  const [mobileNavOpenedOnPath, setMobileNavOpenedOnPath] = useState<
+    string | null
+  >(null);
+  const isMobileNavOpen = mobileNavOpenedOnPath === pathname;
 
   return (
     <div className="min-h-screen bg-(--bg-base) text-(--ink)">
@@ -112,7 +111,7 @@ export function AppShell({ children }: Props) {
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--line) bg-(--bg-surface) md:hidden"
                 aria-label="Open menu"
                 aria-expanded={isMobileNavOpen}
-                onClick={() => setIsMobileNavOpen(true)}
+                onClick={() => setMobileNavOpenedOnPath(pathname)}
               >
                 <Menu size={18} />
               </button>
@@ -152,7 +151,7 @@ export function AppShell({ children }: Props) {
             isMobileNavOpen ? "opacity-100" : "opacity-0",
           )}
           aria-label="Close menu overlay"
-          onClick={() => setIsMobileNavOpen(false)}
+          onClick={() => setMobileNavOpenedOnPath(null)}
         />
         <aside
           className={cn(
@@ -175,19 +174,19 @@ export function AppShell({ children }: Props) {
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-(--line) bg-(--bg-surface)"
               aria-label="Close menu"
-              onClick={() => setIsMobileNavOpen(false)}
+              onClick={() => setMobileNavOpenedOnPath(null)}
             >
               <X size={16} />
             </button>
           </div>
 
           <Suspense fallback={<nav className="mt-6 space-y-2" />}>
-            <ShellNav onNavigate={() => setIsMobileNavOpen(false)} />
+            <ShellNav onNavigate={() => setMobileNavOpenedOnPath(null)} />
           </Suspense>
 
           <Link
             href="/content/new"
-            onClick={() => setIsMobileNavOpen(false)}
+            onClick={() => setMobileNavOpenedOnPath(null)}
             className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-transparent bg-(--amber) px-3 py-2 text-sm font-semibold text-(--teal) hover:border-(--teal)"
           >
             <PlusCircle size={16} />

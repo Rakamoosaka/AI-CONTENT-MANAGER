@@ -3,6 +3,7 @@ import {
   articleFiltersSchema,
 } from "@/lib/validators/articles";
 import { created, fail, okWithMeta } from "@/lib/api/envelope";
+import { readJsonOrFail, validateOrFail } from "@/lib/api/route-utils";
 import { createArticle, listArticles } from "@/lib/db/repositories/articles";
 
 export async function GET(req: Request) {
@@ -34,16 +35,18 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const json = await req.json();
-  const parsed = articleCreateSchema.safeParse(json);
+  const jsonResult = await readJsonOrFail(req);
+  if (!jsonResult.ok) {
+    return jsonResult.response;
+  }
 
-  if (!parsed.success) {
-    return fail(
-      "VALIDATION_ERROR",
-      "Invalid article payload",
-      422,
-      parsed.error.flatten(),
-    );
+  const parsed = validateOrFail(
+    articleCreateSchema,
+    jsonResult.data,
+    "Invalid article payload",
+  );
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
   const data = await createArticle(parsed.data);

@@ -1,5 +1,6 @@
 import { articleUpdateSchema } from "@/lib/validators/articles";
 import { fail, ok } from "@/lib/api/envelope";
+import { readJsonOrFail, validateOrFail } from "@/lib/api/route-utils";
 import {
   deleteArticle,
   getArticleById,
@@ -21,16 +22,18 @@ export async function GET(_: Request, { params }: Params) {
 
 export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
-  const json = await req.json();
-  const parsed = articleUpdateSchema.safeParse(json);
+  const jsonResult = await readJsonOrFail(req);
+  if (!jsonResult.ok) {
+    return jsonResult.response;
+  }
 
-  if (!parsed.success) {
-    return fail(
-      "VALIDATION_ERROR",
-      "Invalid article payload",
-      422,
-      parsed.error.flatten(),
-    );
+  const parsed = validateOrFail(
+    articleUpdateSchema,
+    jsonResult.data,
+    "Invalid article payload",
+  );
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
   const updated = await updateArticle(id, parsed.data);
