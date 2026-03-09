@@ -33,12 +33,12 @@ const LENGTH_PRESETS = [
 
 function FieldLabel({ text, tip }: { text: string; tip: string }) {
   return (
-    <div className="flex items-center gap-2 text-xs font-medium text-(--ink-soft)">
+    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-(--ink-soft)">
       <span>{text}</span>
       <span className="group relative inline-flex">
         <button
           type="button"
-          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-(--line) text-[10px] leading-none"
+          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-(--line) bg-(--bg-surface) text-[10px] leading-none"
           aria-label={`${text} help`}
         >
           ?
@@ -214,8 +214,9 @@ export function EditorScreen({ articleId }: Props) {
 
   return (
     <div className="grid items-start gap-5 xl:grid-cols-[3fr_2fr]">
-      <section className="glass-card rounded-3xl p-5">
-        <h2 className="font-display text-xl font-semibold">Article editor</h2>
+      <section className="glass-card editor-grid-pattern stagger-in rounded-3xl p-5" style={{ animationDelay: "140ms" }}>
+        <h2 className="font-display text-3xl font-semibold tracking-tight">Article editor</h2>
+        <p className="mt-1 text-sm text-(--ink-soft)">Compose, enrich, and ship with AI support in one workspace.</p>
 
         {activeAiTask ? (
           <div className="mt-4 rounded-xl border border-(--line) bg-(--bg-soft) px-3 py-2 text-sm text-(--ink)">
@@ -226,9 +227,9 @@ export function EditorScreen({ articleId }: Props) {
           </div>
         ) : null}
 
-        <div className="mt-4 grid gap-3">
+        <div className="mt-5 grid gap-3">
           <input
-            className="form-control"
+            className="form-control font-display text-xl"
             placeholder="Title"
             value={form.title}
             onChange={(event) => updateForm((prev) => ({ ...prev, title: event.target.value }))}
@@ -236,7 +237,7 @@ export function EditorScreen({ articleId }: Props) {
 
           <div className="relative">
             <textarea
-              className="form-control min-h-80"
+              className="form-control min-h-80 leading-relaxed"
               placeholder="Body"
               value={form.body}
               onChange={(event) => updateForm((prev) => ({ ...prev, body: event.target.value }))}
@@ -302,7 +303,7 @@ export function EditorScreen({ articleId }: Props) {
           </details>
 
           <button
-            className="rounded-xl bg-(--teal) px-4 py-2 font-semibold text-white"
+            className="lift-card rounded-xl bg-(--teal) px-4 py-2 font-semibold text-(--bg-base)"
             onClick={async () => {
               try {
                 const saved = await saveMutation.mutateAsync({
@@ -333,12 +334,16 @@ export function EditorScreen({ articleId }: Props) {
         </div>
       </section>
 
-      <aside className="glass-card sticky top-4 h-fit rounded-3xl p-5">
-        <h3 className="font-display text-lg font-semibold">AI panel</h3>
+      <aside className="glass-card accent-panel stagger-in sticky top-4 h-fit rounded-3xl p-5" style={{ animationDelay: "260ms" }}>
+        <h3 className="font-display text-2xl font-semibold">AI panel</h3>
+        <p className="mt-1 text-sm text-(--ink-soft)">Generate, optimize, and localize without leaving this screen.</p>
 
-        <div className="mt-4 space-y-4">
-          <section className="rounded-2xl border border-(--line) bg-(--bg-surface) p-3">
-            <h4 className="font-medium">Generate</h4>
+        <div className="ai-timeline mt-4 space-y-4">
+          <section
+            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
+            style={{ animationDelay: "320ms" }}
+          >
+            <h4 className="font-display text-lg font-semibold">Generate</h4>
             <div className="mt-2 grid gap-2">
               <FieldLabel
                 text="Topic"
@@ -394,7 +399,7 @@ export function EditorScreen({ articleId }: Props) {
                   <button
                     key={preset.words}
                     type="button"
-                    className="rounded-full border border-(--line) px-2 py-1 text-xs"
+                    className="rounded-full border border-(--line) bg-(--bg-surface) px-2 py-1 text-xs text-(--ink) hover:bg-(--bg-soft)"
                     onClick={() => setTargetLengthInput(String(preset.words))}
                   >
                     {preset.label} ({preset.words})
@@ -403,7 +408,7 @@ export function EditorScreen({ articleId }: Props) {
               </div>
 
               <button
-                className="rounded-lg bg-(--amber) px-3 py-2 font-semibold"
+                className="lift-card rounded-lg bg-(--amber) px-3 py-2 font-semibold text-(--teal)"
                 disabled={generateMutation.isPending}
                 onClick={async () => {
                   try {
@@ -437,8 +442,11 @@ export function EditorScreen({ articleId }: Props) {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-(--line) bg-(--bg-surface) p-3">
-            <h4 className="font-medium">Category suggestion</h4>
+          <section
+            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
+            style={{ animationDelay: "390ms" }}
+          >
+            <h4 className="font-display text-lg font-semibold">Category suggestion</h4>
             <button
               title="Analyze text and suggest the best matching category"
               className="mt-2 rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
@@ -484,7 +492,7 @@ export function EditorScreen({ articleId }: Props) {
                 <p className="mt-1 text-xs text-(--ink-soft)">{categorySuggestion.rationale}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
-                    className="rounded-lg bg-(--teal) px-3 py-1 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base) disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!suggestedCategory}
                     onClick={() => {
                       if (!suggestedCategory) {
@@ -512,8 +520,11 @@ export function EditorScreen({ articleId }: Props) {
             ) : null}
           </section>
 
-          <section className="rounded-2xl border border-(--line) bg-(--bg-surface) p-3">
-            <h4 className="font-medium">SEO</h4>
+          <section
+            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
+            style={{ animationDelay: "460ms" }}
+          >
+            <h4 className="font-display text-lg font-semibold">SEO</h4>
             <button
               title="Generate SEO title, meta description, and keywords from current article"
               className="mt-2 rounded-lg border border-(--line) px-3 py-2 transition-colors hover:border-(--amber) hover:bg-(--bg-soft)"
@@ -553,7 +564,7 @@ export function EditorScreen({ articleId }: Props) {
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
-                    className="rounded-lg bg-(--teal) px-3 py-1 text-white"
+                    className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base)"
                     onClick={() => {
                       updateForm((prev) => ({
                         ...prev,
@@ -581,8 +592,11 @@ export function EditorScreen({ articleId }: Props) {
             ) : null}
           </section>
 
-          <section className="rounded-2xl border border-(--line) bg-(--bg-surface) p-3">
-            <h4 className="font-medium">Translation</h4>
+          <section
+            className="ai-step scan-divider lift-card stagger-in rounded-2xl border border-(--line) bg-(--bg-surface) p-3 pt-4 shadow-[0_10px_30px_-24px_rgba(65,67,27,0.85)]"
+            style={{ animationDelay: "530ms" }}
+          >
+            <h4 className="font-display text-lg font-semibold">Translation</h4>
             <div className="mt-2 grid gap-2">
               <SelectField
                 value={targetLocale}
@@ -637,7 +651,7 @@ export function EditorScreen({ articleId }: Props) {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
-                      className="rounded-lg bg-(--teal) px-3 py-1 text-white"
+                      className="rounded-lg bg-(--teal) px-3 py-1 text-(--bg-base)"
                       onClick={async () => {
                         try {
                           const created = await apiMutation<Article>("/api/articles", "POST", {
@@ -669,7 +683,7 @@ export function EditorScreen({ articleId }: Props) {
                       Create new article
                     </button>
                     <button
-                      className="rounded-lg border border-(--line) bg-white px-3 py-1"
+                      className="rounded-lg border border-(--line) bg-(--bg-surface) px-3 py-1"
                       onClick={() => {
                         updateForm((prev) => ({
                           ...prev,

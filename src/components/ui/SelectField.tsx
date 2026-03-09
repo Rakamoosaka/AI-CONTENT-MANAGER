@@ -87,9 +87,9 @@ export function SelectField({
         type="button"
         disabled={disabled}
         className={cn(
-          "w-full rounded-xl border border-(--line) bg-(--bg-surface) px-3 py-2 text-left",
+          "w-full rounded-xl border border-(--line) bg-(--bg-surface) px-3 py-2 text-left text-(--ink)",
           "flex items-center justify-between gap-2",
-          "focus-visible:outline-none",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--amber)/70",
           disabled ? "cursor-not-allowed opacity-60" : "",
         )}
         onClick={() => setOpen((prev) => !prev)}
@@ -102,7 +102,7 @@ export function SelectField({
         aria-expanded={open}
       >
         <span className="truncate">{selectedLabel}</span>
-        <span className={cn("text-(--ink-soft) transition-transform", open ? "rotate-180" : "")}>v</span>
+        <span className={cn("text-(--ink-soft) transition-transform", open ? "rotate-180" : "")}>⌄</span>
       </button>
 
       {open ? (
@@ -121,7 +121,7 @@ export function SelectField({
                     type="button"
                     className={cn(
                       "block w-full px-3 py-2 text-left",
-                      active ? "bg-(--teal) text-white" : "hover:bg-(--bg-soft)",
+                      active ? "bg-(--teal) text-(--bg-base)" : "hover:bg-(--bg-soft)",
                     )}
                     onClick={() => {
                       onChange(option.value);

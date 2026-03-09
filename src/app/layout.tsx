@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Manrope, Source_Sans_3 } from "next/font/google";
+import { Fraunces, Source_Serif_4 } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ToasterProvider } from "@/components/providers/ToasterProvider";
 import "./globals.css";
 
-const heading = Manrope({
+const heading = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
 });
 
-const body = Source_Sans_3({
+const body = Source_Serif_4({
   variable: "--font-body",
   subsets: ["latin"],
 });
