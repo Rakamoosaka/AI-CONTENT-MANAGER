@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Fragment,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Article } from "@/features/content/list/types";
 import { SelectField } from "@/components/ui/SelectField";
 import { ARTICLE_STATUS_OPTIONS } from "./constants";
@@ -155,7 +149,11 @@ export function EditorFormPanel({
     updateForm((prev) => ({ ...prev, body: next }));
   }
 
-  function updateBody(text: string, selectionStart: number, selectionEnd: number) {
+  function updateBody(
+    text: string,
+    selectionStart: number,
+    selectionEnd: number,
+  ) {
     commitBodyChange(text);
 
     requestAnimationFrame(() => {
@@ -185,7 +183,10 @@ export function EditorFormPanel({
       selected.startsWith(prefix) &&
       selected.endsWith(suffix)
     ) {
-      const unwrapped = selected.slice(prefix.length, selected.length - suffix.length);
+      const unwrapped = selected.slice(
+        prefix.length,
+        selected.length - suffix.length,
+      );
       const nextValue = value.slice(0, start) + unwrapped + value.slice(end);
 
       return {
@@ -275,16 +276,21 @@ export function EditorFormPanel({
           : action === "inlineCode"
             ? wrapSelection(value, start, end, "`", "`", "code")
             : action === "codeBlock"
-                ? wrapSelection(value, start, end, "```\n", "\n```", "code")
-                : action === "h2"
-                  ? prefixLines(value, start, end, () => "## ")
-                  : action === "h3"
-                    ? prefixLines(value, start, end, () => "### ")
-                    : action === "bullet"
-                      ? prefixLines(value, start, end, () => "- ")
-                      : action === "numbered"
-                        ? prefixLines(value, start, end, (lineIndex) => `${lineIndex + 1}. `)
-                        : prefixLines(value, start, end, () => "> ");
+              ? wrapSelection(value, start, end, "```\n", "\n```", "code")
+              : action === "h2"
+                ? prefixLines(value, start, end, () => "## ")
+                : action === "h3"
+                  ? prefixLines(value, start, end, () => "### ")
+                  : action === "bullet"
+                    ? prefixLines(value, start, end, () => "- ")
+                    : action === "numbered"
+                      ? prefixLines(
+                          value,
+                          start,
+                          end,
+                          (lineIndex) => `${lineIndex + 1}. `,
+                        )
+                      : prefixLines(value, start, end, () => "> ");
 
     updateBody(apply.nextValue, apply.selectionStart, apply.selectionEnd);
   }
@@ -310,7 +316,10 @@ export function EditorFormPanel({
 
   function handleBodyKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (!event.metaKey && !event.ctrlKey && event.key === "Enter") {
-      if (!bodyRef.current || bodyRef.current.selectionStart !== bodyRef.current.selectionEnd) {
+      if (
+        !bodyRef.current ||
+        bodyRef.current.selectionStart !== bodyRef.current.selectionEnd
+      ) {
         return;
       }
 
@@ -331,7 +340,8 @@ export function EditorFormPanel({
       if (bulletMatch) {
         event.preventDefault();
         const insertion = `\n${bulletMatch[1]}`;
-        const nextValue = value.slice(0, cursor) + insertion + value.slice(cursor);
+        const nextValue =
+          value.slice(0, cursor) + insertion + value.slice(cursor);
         const nextCursor = cursor + insertion.length;
         updateBody(nextValue, nextCursor, nextCursor);
         return;
@@ -341,7 +351,8 @@ export function EditorFormPanel({
         event.preventDefault();
         const nextNumber = Number(orderedMatch[2]) + 1;
         const insertion = `\n${orderedMatch[1]}${nextNumber}. `;
-        const nextValue = value.slice(0, cursor) + insertion + value.slice(cursor);
+        const nextValue =
+          value.slice(0, cursor) + insertion + value.slice(cursor);
         const nextCursor = cursor + insertion.length;
         updateBody(nextValue, nextCursor, nextCursor);
       }
@@ -498,9 +509,7 @@ export function EditorFormPanel({
               className="form-control min-h-80 leading-relaxed"
               placeholder="Body"
               value={form.body}
-              onChange={(event) =>
-                commitBodyChange(event.target.value)
-              }
+              onChange={(event) => commitBodyChange(event.target.value)}
               onKeyDown={handleBodyKeyDown}
             />
           ) : (
@@ -608,7 +617,10 @@ function MarkdownPreview({ markdown }: { markdown: string }) {
       const codeLines: string[] = [];
       index += 1;
 
-      while (index < lines.length && !(lines[index] ?? "").trim().startsWith("```")) {
+      while (
+        index < lines.length &&
+        !(lines[index] ?? "").trim().startsWith("```")
+      ) {
         codeLines.push(lines[index] ?? "");
         index += 1;
       }
@@ -661,7 +673,9 @@ function MarkdownPreview({ markdown }: { markdown: string }) {
         }
 
         listItems.push(
-          <li key={`ol-item-${orderedCursor}`}>{renderInlineMarkdown(match[1])}</li>,
+          <li key={`ol-item-${orderedCursor}`}>
+            {renderInlineMarkdown(match[1])}
+          </li>,
         );
         orderedCursor += 1;
       }
@@ -687,7 +701,9 @@ function MarkdownPreview({ markdown }: { markdown: string }) {
         }
 
         listItems.push(
-          <li key={`ul-item-${bulletCursor}`}>{renderInlineMarkdown(line.slice(2))}</li>,
+          <li key={`ul-item-${bulletCursor}`}>
+            {renderInlineMarkdown(line.slice(2))}
+          </li>,
         );
         bulletCursor += 1;
       }
@@ -755,7 +771,8 @@ function MarkdownPreview({ markdown }: { markdown: string }) {
 
 function renderInlineMarkdown(value: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const tokenPattern = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\((https?:\/\/[^\s)]+)\))/g;
+  const tokenPattern =
+    /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\((https?:\/\/[^\s)]+)\))/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null = tokenPattern.exec(value);
 
@@ -767,7 +784,9 @@ function renderInlineMarkdown(value: string): ReactNode[] {
     const token = match[0];
 
     if (token.startsWith("**") && token.endsWith("**")) {
-      nodes.push(<strong key={`strong-${match.index}`}>{token.slice(2, -2)}</strong>);
+      nodes.push(
+        <strong key={`strong-${match.index}`}>{token.slice(2, -2)}</strong>,
+      );
     } else if (token.startsWith("*") && token.endsWith("*")) {
       nodes.push(<em key={`em-${match.index}`}>{token.slice(1, -1)}</em>);
     } else if (token.startsWith("`") && token.endsWith("`")) {
