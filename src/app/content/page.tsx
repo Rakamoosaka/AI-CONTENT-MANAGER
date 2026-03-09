@@ -124,7 +124,7 @@ export default function ContentPage() {
           <div className="flex items-end">
             <Link
               href="/content/new"
-              className="w-full rounded-xl bg-(--teal) px-3 py-2 text-center font-semibold text-white"
+              className="inline-flex h-11.5 w-full items-center justify-center rounded-xl bg-(--teal) px-3 text-center font-semibold text-white"
             >
               New article
             </Link>
