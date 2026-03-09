@@ -14,7 +14,10 @@ Mini CMS built with Next.js App Router, React Query, Drizzle + SQLite, and integ
 
 ## Required Environment
 
-Copy `.env.example` to `.env.local` and set values:
+1. Copy `.env.example` to `.env.local` (or `.env`).
+2. Set `OPENROUTER_API_KEY` to your own key.
+
+Template values:
 
 - `DATABASE_URL=file:./sqlite.db`
 - `OPENROUTER_API_KEY=...`
