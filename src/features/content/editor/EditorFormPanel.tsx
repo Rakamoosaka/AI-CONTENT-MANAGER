@@ -3,6 +3,9 @@
 import { useI18n } from "@/components/providers/I18nProvider";
 import type { Article } from "@/features/content/list/types";
 import { SelectField } from "@/components/ui/SelectField";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ARTICLE_STATUS_OPTIONS } from "./constants";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { TOOLBAR_BUTTONS } from "./editorToolbar";
@@ -65,8 +68,8 @@ export function EditorFormPanel({
       ) : null}
 
       <div className="mt-5 grid gap-3">
-        <input
-          className="form-control font-display text-xl"
+        <Input
+          className="font-display text-xl"
           placeholder={t("editor.titlePlaceholder")}
           value={form.title}
           onChange={(event) =>
@@ -77,7 +80,7 @@ export function EditorFormPanel({
         <div className="relative">
           <div className="mb-2 flex flex-wrap gap-2 rounded-xl border border-(--line) bg-(--bg-surface) p-2">
             {TOOLBAR_BUTTONS.map((button) => (
-              <button
+              <Button
                 key={button.action}
                 type="button"
                 title={
@@ -90,44 +93,42 @@ export function EditorFormPanel({
                     ? `${t(button.titleKey)} (${button.shortcut})`
                     : t(button.titleKey)
                 }
-                className="lift-card rounded-lg border border-(--line) bg-(--bg-base) px-2.5 py-1 text-xs font-semibold text-(--ink)"
+                variant="secondary"
+                size="sm"
+                className="lift-card text-xs"
                 onClick={() => handleFormat(button.action)}
               >
                 {button.labelKey ? t(button.labelKey) : button.label}
-              </button>
+              </Button>
             ))}
             <div className="ml-auto flex items-center gap-2">
-              <button
+              <Button
                 type="button"
                 title={t("editor.writeMode")}
-                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${
-                  editorMode === "write"
-                    ? "border-(--teal) bg-(--teal) text-(--bg-base)"
-                    : "border-(--line) bg-(--bg-base) text-(--ink)"
-                }`}
+                size="sm"
+                className="text-xs"
+                variant={editorMode === "write" ? "default" : "secondary"}
                 onClick={() => setEditorMode("write")}
               >
                 {t("editor.write")}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 title={t("editor.previewMode")}
-                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold ${
-                  editorMode === "preview"
-                    ? "border-(--teal) bg-(--teal) text-(--bg-base)"
-                    : "border-(--line) bg-(--bg-base) text-(--ink)"
-                }`}
+                size="sm"
+                className="text-xs"
+                variant={editorMode === "preview" ? "default" : "secondary"}
                 onClick={() => setEditorMode("preview")}
               >
                 {t("editor.preview")}
-              </button>
+              </Button>
             </div>
           </div>
 
           {editorMode === "write" ? (
-            <textarea
+            <Textarea
               ref={bodyRef}
-              className="form-control min-h-80 leading-relaxed"
+              className="min-h-80 leading-relaxed"
               placeholder={t("editor.bodyPlaceholder")}
               value={form.body}
               onChange={(event) => commitBodyChange(event.target.value)}
@@ -177,8 +178,7 @@ export function EditorFormPanel({
             {t("editor.seo")}
           </summary>
           <div className="mt-3 grid gap-2">
-            <input
-              className="form-control"
+            <Input
               placeholder={t("editor.seoTitle")}
               value={form.seoTitle}
               onChange={(event) =>
@@ -188,8 +188,7 @@ export function EditorFormPanel({
                 }))
               }
             />
-            <textarea
-              className="form-control"
+            <Textarea
               placeholder={t("editor.seoDescription")}
               value={form.seoDescription}
               onChange={(event) =>
@@ -199,8 +198,7 @@ export function EditorFormPanel({
                 }))
               }
             />
-            <input
-              className="form-control"
+            <Input
               placeholder={t("editor.seoKeywords")}
               value={form.seoKeywords}
               onChange={(event) =>
@@ -213,13 +211,9 @@ export function EditorFormPanel({
           </div>
         </details>
 
-        <button
-          className="lift-card rounded-xl bg-(--teal) px-4 py-2 font-semibold text-(--bg-base)"
-          onClick={onSave}
-          disabled={isSaving}
-        >
+        <Button className="lift-card" onClick={onSave} disabled={isSaving}>
           {isSaving ? t("editor.saving") : t("editor.saveArticle")}
-        </button>
+        </Button>
       </div>
     </section>
   );

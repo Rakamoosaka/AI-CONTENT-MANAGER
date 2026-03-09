@@ -4,6 +4,17 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { apiMutation } from "@/lib/api/client";
 import {
   useCategories,
@@ -47,15 +58,14 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-5">
       <div className="flex justify-end">
-        <button
-          className="rounded-xl bg-(--teal) px-3 py-2 font-semibold text-white"
+        <Button
           onClick={() => {
             setEditing(null);
             setOpen(true);
           }}
         >
           {t("categories.newCategory")}
-        </button>
+        </Button>
       </div>
 
       <section className="glass-card rounded-3xl p-5">
@@ -87,7 +97,9 @@ export default function CategoriesPage() {
                   </td>
                   <td className="min-w-48 align-top">
                     <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="shrink-0 whitespace-nowrap"
                         onClick={() => {
                           setEditing(item);
@@ -95,7 +107,7 @@ export default function CategoriesPage() {
                         }}
                       >
                         {t("common.edit")}
-                      </button>
+                      </Button>
                       {(item.articleCount ?? 0) > 0 ? (
                         <span className="group relative inline-flex">
                           <button
@@ -110,12 +122,14 @@ export default function CategoriesPage() {
                           </span>
                         </span>
                       ) : (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="shrink-0 whitespace-nowrap text-(--danger)"
                           onClick={() => setDeletingCategory(item)}
                         >
                           {t("common.delete")}
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </td>
@@ -149,23 +163,23 @@ export default function CategoriesPage() {
       ) : null}
 
       {deletingCategory ? (
-        <div className="modal-overlay fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-          <div className="modal-panel glass-card w-full max-w-md rounded-3xl p-4">
-            <h3 className="font-display text-lg font-semibold">
-              {t("categories.confirmDeletion")}
-            </h3>
-            <p className="mt-2 text-sm text-(--ink-soft)">
-              {t("categories.deletePrompt", { name: deletingCategory.name })}
-            </p>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                className="rounded-lg border border-(--line) px-3 py-2"
+        <Dialog open onOpenChange={() => setDeletingCategory(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t("categories.confirmDeletion")}</DialogTitle>
+              <DialogDescription>
+                {t("categories.deletePrompt", { name: deletingCategory.name })}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="secondary"
                 onClick={() => setDeletingCategory(null)}
               >
                 {t("common.cancel")}
-              </button>
-              <button
-                className="rounded-lg bg-(--danger) px-3 py-2 text-white"
+              </Button>
+              <Button
+                variant="destructive"
                 disabled={(deletingCategory.articleCount ?? 0) > 0}
                 onClick={async () => {
                   try {
@@ -182,10 +196,10 @@ export default function CategoriesPage() {
                 }}
               >
                 {t("common.delete")}
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </div>
   );
@@ -239,21 +253,22 @@ function CategoryDialog({
   }
 
   return (
-    <div className="modal-overlay fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-      <div className="modal-panel glass-card w-full max-w-md rounded-3xl p-4">
-        <h3 className="font-display text-lg font-semibold">
-          {initial
-            ? t("categories.dialog.edit")
-            : t("categories.dialog.create")}
-        </h3>
-        <div className="mt-3 grid gap-2">
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {initial
+              ? t("categories.dialog.edit")
+              : t("categories.dialog.create")}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-2">
           <div>
             <FieldLabel
               text={t("categories.field.name")}
               tip={t("categories.field.nameTip")}
             />
-            <input
-              className="form-control"
+            <Input
               placeholder={t("categories.field.name")}
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -264,8 +279,7 @@ function CategoryDialog({
               text={t("categories.field.slug")}
               tip={t("categories.field.slugTip")}
             />
-            <input
-              className="form-control"
+            <Input
               placeholder={t("categories.field.slug")}
               value={slug}
               onChange={(event) => setSlug(event.target.value)}
@@ -276,31 +290,22 @@ function CategoryDialog({
               text={t("categories.field.description")}
               tip={t("categories.field.descriptionTip")}
             />
-            <textarea
-              className="form-control"
+            <Textarea
               placeholder={t("categories.field.description")}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
           </div>
         </div>
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            className="rounded-lg border border-(--line) px-3 py-2"
-            onClick={onClose}
-            disabled={isSaving}
-          >
+        <DialogFooter>
+          <Button variant="secondary" onClick={onClose} disabled={isSaving}>
             {t("common.cancel")}
-          </button>
-          <button
-            className="rounded-lg bg-(--teal) px-3 py-2 text-white"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? t("categories.saving") : t("common.save")}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
