@@ -11,7 +11,12 @@ export class ApiRequestError extends Error {
   code?: string;
   details?: unknown;
 
-  constructor(message: string, status: number, code?: string, details?: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: unknown,
+  ) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
